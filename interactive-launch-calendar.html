@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCo - Interactive Launch Calendar</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f9fafb; color: #111827; line-height: 1.6; }
+        .header { background: linear-gradient(135deg, #f2613f 0%, #d84315 100%); color: white; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header-content { max-width: 1600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.75rem; font-weight: 700; }
+        .view-controls { display: flex; gap: 0.5rem; }
+        .view-btn { padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .view-btn:hover { background: rgba(255,255,255,0.3); }
+        .view-btn.active { background: white; color: #f2613f; border-color: white; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 2rem; }
+        .filters { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: center; }
+        .filter-group { display: flex; gap: 0.5rem; }
+        .filter-btn { padding: 0.5rem 1rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .filter-btn:hover { border-color: #f2613f; }
+        .filter-btn.active { border-color: #f2613f; background: #f2613f; color: white; }
+        .legend { display: flex; gap: 2rem; padding: 1rem; background: white; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+        .legend-box { width: 20px; height: 20px; border-radius: 4px; }
+        .calendar-grid { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+        .calendar-header { display: grid; grid-template-columns: 200px repeat(12, 1fr); background: #f9fafb; border-bottom: 2px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+        .calendar-month { padding: 1rem; text-align: center; font-weight: 600; font-size: 0.875rem; border-right: 1px solid #e5e7eb; }
+        .calendar-month:last-child { border-right: none; }
+        .calendar-label { padding: 1rem; font-weight: 600; font-size: 0.875rem; color: #6b7280; background: #f9fafb; border-right: 2px solid #e5e7eb; }
+        .calendar-row { display: grid; grid-template-columns: 200px repeat(12, 1fr); border-bottom: 1px solid #e5e7eb; min-height: 60px; align-items: center; transition: background 0.2s; }
+        .calendar-row:hover { background: #f9fafb; }
+        .row-label { padding: 1rem; font-weight: 500; font-size: 0.875rem; border-right: 2px solid #e5e7eb; background: white; }
+        .row-label a { color: #111827; text-decoration: none; }
+        .row-label a:hover { color: #f2613f; }
+        .calendar-cells { display: contents; }
+        .calendar-cell { border-right: 1px solid #f3f4f6; padding: 0.5rem; position: relative; min-height: 60px; }
+        .calendar-cell:last-child { border-right: none; }
+        .launch-item { padding: 0.75rem; border-radius: 8px; margin: 0.25rem 0; font-size: 0.75rem; font-weight: 500; cursor: pointer; position: relative; transition: all 0.2s; border-left: 4px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .launch-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+        .launch-item.ga { background: #d1fae5; border-left-color: #059669; color: #065f46; }
+        .launch-item.beta { background: #fef3c7; border-left-color: #f59e0b; color: #92400e; }
+        .launch-item.in-dev { background: #dbeafe; border-left-color: #3b82f6; color: #1e40af; }
+        .launch-item.research { background: #f3f4f6; border-left-color: #6b7280; color: #4b5563; }
+        .launch-item.at-risk { background: #fee2e2; border-left-color: #dc2626; color: #991b1b; }
+        .launch-item-title { font-weight: 600; margin-bottom: 0.25rem; }
+        .launch-item-meta { font-size: 0.7rem; opacity: 0.8; }
+        .launch-item-progress { height: 3px; background: rgba(0,0,0,0.1); border-radius: 2px; margin-top: 0.5rem; overflow: hidden; }
+        .launch-item-progress-fill { height: 100%; background: currentColor; border-radius: 2px; }
+        .calendar-view { display: none; }
+        .calendar-view.active { display: block; }
+        .timeline-view { display: none; }
+        .timeline-view.active { display: block; }
+        .timeline-quarter { margin-bottom: 3rem; }
+        .quarter-header { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #f2613f; }
+        .timeline-items { display: grid; gap: 1rem; }
+        .timeline-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid; transition: transform 0.2s; }
+        .timeline-card:hover { transform: translateX(4px); }
+        .timeline-card.ga { border-left-color: #059669; }
+        .timeline-card.beta { border-left-color: #f59e0b; }
+        .timeline-card.in-dev { border-left-color: #3b82f6; }
+        .timeline-card.research { border-left-color: #6b7280; }
+        .timeline-card.at-risk { border-left-color: #dc2626; }
+        .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+        .card-title { font-size: 1.125rem; font-weight: 600; }
+        .card-badges { display: flex; gap: 0.5rem; }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .card-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+        .meta-item { font-size: 0.875rem; }
+        .meta-label { color: #6b7280; font-size: 0.75rem; margin-bottom: 0.25rem; }
+        .meta-value { font-weight: 600; }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-change { font-size: 0.875rem; margin-top: 0.25rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 2rem; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem; }
+        .modal-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+        .modal-close:hover { color: #111827; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>📅 Interactive Launch Calendar 2026</h1>
+                <p style="opacity: 0.9; margin-top: 0.5rem;">Live roadmap synced from Linear • Click any launch to see details</p>
+            </div>
+            <div class="view-controls">
+                <button class="view-btn active" id="btnCalendar">📅 Calendar View</button>
+                <button class="view-btn" id="btnTimeline">📊 Timeline View</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Launching This Quarter</div>
+                <div class="stat-value" style="color: #f2613f;">8</div>
+                <div class="stat-change" style="color: #059669;">↑ 2 more than Q4 2025</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">On Track</div>
+                <div class="stat-value" style="color: #22c55e;">85%</div>
+                <div class="stat-change">11 of 13 features on schedule</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">At Risk</div>
+                <div class="stat-value" style="color: #f59e0b;">2</div>
+                <div class="stat-change">Magistral v2, Multi-modal</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Time to Ship</div>
+                <div class="stat-value" style="color: #6b7280;">6.2 weeks</div>
+                <div class="stat-change" style="color: #059669;">↓ 1.8 weeks improvement</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group" id="statusFilters">
+                <button class="filter-btn active" id="statusAll">All</button>
+                <button class="filter-btn" id="statusGa">✅ Shipped</button>
+                <button class="filter-btn" id="statusBeta">🧪 Beta</button>
+                <button class="filter-btn" id="statusInDev">🔵 In Dev</button>
+                <button class="filter-btn" id="statusAtRisk">⚠️ At Risk</button>
+            </div>
+            <div class="filter-group" id="teamFilters">
+                <button class="filter-btn active" id="teamAll">All Teams</button>
+                <button class="filter-btn" id="teamEng">⚙️ Engineering</button>
+                <button class="filter-btn" id="teamMl">🧠 ML Research</button>
+                <button class="filter-btn" id="teamProduct">📦 Product</button>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #d1fae5; border: 2px solid #059669;"></div>
+                <span>Shipped (GA)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fef3c7; border: 2px solid #f59e0b;"></div>
+                <span>Beta Available</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #dbeafe; border: 2px solid #3b82f6;"></div>
+                <span>In Development</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fee2e2; border: 2px solid #dc2626;"></div>
+                <span>At Risk / Delayed</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #f3f4f6; border: 2px solid #6b7280;"></div>
+                <span>Research</span>
+            </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div id="calendarView" class="calendar-view active">
+            <div class="calendar-grid">
+                <div class="calendar-header">
+                    <div class="calendar-label">Feature / Quarter</div>
+                    <div class="calendar-month">Jan</div>
+                    <div class="calendar-month">Feb</div>
+                    <div class="calendar-month">Mar</div>
+                    <div class="calendar-month">Apr</div>
+                    <div class="calendar-month">May</div>
+                    <div class="calendar-month">Jun</div>
+                    <div class="calendar-month">Jul</div>
+                    <div class="calendar-month">Aug</div>
+                    <div class="calendar-month">Sep</div>
+                    <div class="calendar-month">Oct</div>
+                    <div class="calendar-month">Nov</div>
+                    <div class="calendar-month">Dec</div>
+                </div>
+
+                <!-- CPU Inference - Shipped -->
+                <div class="calendar-row" data-team="engineering" data-status="ga">
+                    <div class="row-label"><a href="#">CPU Inference</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell">
+                            <div class="launch-item ga">
+                                <div class="launch-item-title">✅ Shipped</div>
+                                <div class="launch-item-meta">Jan 10</div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+
+                <!-- Windows Support - Beta -->
+                <div class="calendar-row" data-team="engineering" data-status="beta">
+                    <div class="row-label"><a href="#">Windows Support</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell">
+                            <div class="launch-item beta">
+                                <div class="launch-item-title">🧪 Beta → GA</div>
+                                <div class="launch-item-meta">Feb 15</div>
+                                <div class="launch-item-progress"><div class="launch-item-progress-fill" style="width: 80%;"></div></div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+
+                <!-- Documentation v2 - In Dev -->
+                <div class="calendar-row" data-team="product" data-status="in-dev">
+                    <div class="row-label"><a href="#">Documentation v2</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell">
+                            <div class="launch-item in-dev">
+                                <div class="launch-item-title">🔵 In Progress</div>
+                                <div class="launch-item-meta">March 1</div>
+                                <div class="launch-item-progress"><div class="launch-item-progress-fill" style="width: 45%;"></div></div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+
+                <!-- Magistral v2 - At Risk -->
+                <div class="calendar-row" data-team="ml" data-status="at-risk">
+                    <div class="row-label"><a href="#">Magistral v2</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell">
+                            <div class="launch-item at-risk">
+                                <div class="launch-item-title">⚠️ At Risk</div>
+                                <div class="launch-item-meta">Q2 target</div>
+                                <div class="launch-item-progress"><div class="launch-item-progress-fill" style="width: 20%;"></div></div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+
+                <!-- Blackwell GPU - In Dev -->
+                <div class="calendar-row" data-team="engineering" data-status="in-dev">
+                    <div class="row-label"><a href="#">Blackwell GPU Support</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell">
+                            <div class="launch-item in-dev">
+                                <div class="launch-item-title">🔵 In Progress</div>
+                                <div class="launch-item-meta">June 1</div>
+                                <div class="launch-item-progress"><div class="launch-item-progress-fill" style="width: 35%;"></div></div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+
+                <!-- Multi-modal - Research -->
+                <div class="calendar-row" data-team="ml" data-status="research">
+                    <div class="row-label"><a href="#">Multi-modal (Vision)</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell">
+                            <div class="launch-item research">
+                                <div class="launch-item-title">🔬 Research</div>
+                                <div class="launch-item-meta">Q3 tentative</div>
+                                <div class="launch-item-progress"><div class="launch-item-progress-fill" style="width: 5%;"></div></div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+
+                <!-- Enterprise SSO - In Dev -->
+                <div class="calendar-row" data-team="engineering" data-status="in-dev">
+                    <div class="row-label"><a href="#">Enterprise SSO</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell">
+                            <div class="launch-item in-dev">
+                                <div class="launch-item-title">🔵 Planned</div>
+                                <div class="launch-item-meta">Sep 1</div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+
+                <!-- TechCo Pro 4 - In Dev -->
+                <div class="calendar-row" data-team="ml" data-status="in-dev">
+                    <div class="row-label"><a href="#">TechCo Pro 4</a></div>
+                    <div class="calendar-cells">
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell"></div>
+                        <div class="calendar-cell">
+                            <div class="launch-item in-dev">
+                                <div class="launch-item-title">🔵 Training</div>
+                                <div class="launch-item-meta">Nov 15</div>
+                                <div class="launch-item-progress"><div class="launch-item-progress-fill" style="width: 15%;"></div></div>
+                            </div>
+                        </div>
+                        <div class="calendar-cell"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline View -->
+        <div id="timelineView" class="timeline-view">
+            <div class="timeline-quarter">
+                <div class="quarter-header">Q1 2026 (Jan - Mar)</div>
+                <div class="timeline-items">
+                    <div class="timeline-card ga">
+                        <div class="card-header">
+                            <div class="card-title">CPU Inference Optimization</div>
+                            <div class="card-badges"><span class="badge" style="background: #d1fae5; color: #065f46;">✅ Shipped Jan 10</span></div>
+                        </div>
+                        <p style="color: #6b7280;">Run models without GPU - 60% cost reduction for edge deployment</p>
+                        <div class="card-meta">
+                            <div class="meta-item"><div class="meta-label">Team</div><div class="meta-value">Engineering</div></div>
+                            <div class="meta-item"><div class="meta-label">Customer Demand</div><div class="meta-value">18 customers, $145K ARR</div></div>
+                        </div>
+                    </div>
+                    <div class="timeline-card beta">
+                        <div class="card-header">
+                            <div class="card-title">Windows Native Support</div>
+                            <div class="card-badges"><span class="badge" style="background: #fef3c7; color: #92400e;">🧪 Beta → GA Feb 15</span></div>
+                        </div>
+                        <p style="color: #6b7280;">Fix DLL errors, seamless Windows Server deployment</p>
+                        <div class="card-meta">
+                            <div class="meta-item"><div class="meta-label">Progress</div><div class="meta-value">80%</div></div>
+                            <div class="meta-item"><div class="meta-label">Confidence</div><div class="meta-value">High (90%)</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-quarter">
+                <div class="quarter-header">Q2 2026 (Apr - Jun)</div>
+                <div class="timeline-items">
+                    <div class="timeline-card at-risk">
+                        <div class="card-header">
+                            <div class="card-title">Magistral Reasoning v2</div>
+                            <div class="card-badges"><span class="badge" style="background: #fee2e2; color: #991b1b;">⚠️ At Risk</span></div>
+                        </div>
+                        <p style="color: #6b7280;">Fix infinite loops, expand to 200K context</p>
+                        <div class="card-meta">
+                            <div class="meta-item"><div class="meta-label">Progress</div><div class="meta-value" style="color: #dc2626;">20%</div></div>
+                            <div class="meta-item"><div class="meta-label">Confidence</div><div class="meta-value" style="color: #dc2626;">Medium (60%)</div></div>
+                        </div>
+                    </div>
+                    <div class="timeline-card in-dev">
+                        <div class="card-header">
+                            <div class="card-title">Blackwell GPU Support</div>
+                            <div class="card-badges"><span class="badge" style="background: #dbeafe; color: #1e40af;">🔵 June 1</span></div>
+                        </div>
+                        <p style="color: #6b7280;">Flash attention for NVIDIA Blackwell architecture</p>
+                        <div class="card-meta">
+                            <div class="meta-item"><div class="meta-label">Progress</div><div class="meta-value">35%</div></div>
+                            <div class="meta-item"><div class="meta-label">Team</div><div class="meta-value">Engineering</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-quarter">
+                <div class="quarter-header">Q3-Q4 2026</div>
+                <div class="timeline-items">
+                    <div class="timeline-card research">
+                        <div class="card-header">
+                            <div class="card-title">Multi-modal Capabilities</div>
+                            <div class="card-badges"><span class="badge" style="background: #f3f4f6; color: #4b5563;">🔬 Research</span></div>
+                        </div>
+                        <p style="color: #6b7280;">Vision + text understanding - compete with GPT-4V</p>
+                        <div class="card-meta">
+                            <div class="meta-item"><div class="meta-label">Status</div><div class="meta-value">Research spike</div></div>
+                            <div class="meta-item"><div class="meta-label">Confidence</div><div class="meta-value" style="color: #6b7280;">Low (30%)</div></div>
+                        </div>
+                    </div>
+                    <div class="timeline-card in-dev">
+                        <div class="card-header">
+                            <div class="card-title">TechCo Pro 4</div>
+                            <div class="card-badges"><span class="badge" style="background: #dbeafe; color: #1e40af;">🔵 Nov 15</span></div>
+                        </div>
+                        <p style="color: #6b7280;">Next-gen flagship model</p>
+                        <div class="card-meta">
+                            <div class="meta-item"><div class="meta-label">Progress</div><div class="meta-value">15%</div></div>
+                            <div class="meta-item"><div class="meta-label">Team</div><div class="meta-value">ML Research</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        var currentStatusFilter = 'all';
+        var currentTeamFilter = 'all';
+
+        // View toggle buttons
+        document.getElementById('btnCalendar').addEventListener('click', function() {
+            document.getElementById('btnCalendar').classList.add('active');
+            document.getElementById('btnTimeline').classList.remove('active');
+            document.getElementById('calendarView').classList.add('active');
+            document.getElementById('timelineView').classList.remove('active');
+        });
+
+        document.getElementById('btnTimeline').addEventListener('click', function() {
+            document.getElementById('btnTimeline').classList.add('active');
+            document.getElementById('btnCalendar').classList.remove('active');
+            document.getElementById('timelineView').classList.add('active');
+            document.getElementById('calendarView').classList.remove('active');
+        });
+
+        // Status filter buttons
+        document.getElementById('statusAll').addEventListener('click', function() { setStatusFilter('all', this); });
+        document.getElementById('statusGa').addEventListener('click', function() { setStatusFilter('ga', this); });
+        document.getElementById('statusBeta').addEventListener('click', function() { setStatusFilter('beta', this); });
+        document.getElementById('statusInDev').addEventListener('click', function() { setStatusFilter('in-dev', this); });
+        document.getElementById('statusAtRisk').addEventListener('click', function() { setStatusFilter('at-risk', this); });
+
+        // Team filter buttons
+        document.getElementById('teamAll').addEventListener('click', function() { setTeamFilter('all', this); });
+        document.getElementById('teamEng').addEventListener('click', function() { setTeamFilter('engineering', this); });
+        document.getElementById('teamMl').addEventListener('click', function() { setTeamFilter('ml', this); });
+        document.getElementById('teamProduct').addEventListener('click', function() { setTeamFilter('product', this); });
+
+        function setStatusFilter(status, btn) {
+            currentStatusFilter = status;
+            var btns = document.querySelectorAll('#statusFilters .filter-btn');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.remove('active');
+            }
+            btn.classList.add('active');
+            applyFilters();
+        }
+
+        function setTeamFilter(team, btn) {
+            currentTeamFilter = team;
+            var btns = document.querySelectorAll('#teamFilters .filter-btn');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.remove('active');
+            }
+            btn.classList.add('active');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            var rows = document.querySelectorAll('.calendar-row');
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var rowStatus = row.getAttribute('data-status');
+                var rowTeam = row.getAttribute('data-team');
+
+                var statusMatch = (currentStatusFilter === 'all') || (rowStatus === currentStatusFilter);
+                var teamMatch = (currentTeamFilter === 'all') || (rowTeam === currentTeamFilter);
+
+                if (statusMatch && teamMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

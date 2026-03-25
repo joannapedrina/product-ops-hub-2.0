@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCo - Sales Roadmap Sync Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f2613f 0%, #d84315 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .sync-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .alert-bar {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-bar-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-bar-content {
+            flex: 1;
+        }
+
+        .alert-bar-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-bar-message {
+            font-size: 0.875rem;
+            color: #92400e;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: #f2613f;
+            color: #f2613f;
+        }
+
+        .filter-btn.active {
+            border-color: #f2613f;
+            background: #f2613f;
+            color: white;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-count {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .feature-card.ga {
+            border-left-color: #22c55e;
+        }
+
+        .feature-card.beta {
+            border-left-color: #f59e0b;
+        }
+
+        .feature-card.in-dev {
+            border-left-color: #3b82f6;
+        }
+
+        .feature-card.research {
+            border-left-color: #6b7280;
+        }
+
+        .feature-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-description {
+            color: #6b7280;
+            font-size: 0.9375rem;
+        }
+
+        .feature-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-ga {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-beta {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-in-dev {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-research {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .badge-confidence {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .feature-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f2613f 0%, #d84315 100%);
+            transition: width 0.3s;
+        }
+
+        .warning-box {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .warning-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-weight: 600;
+            color: #991b1b;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .warning-message {
+            color: #7f1d1d;
+            font-size: 0.875rem;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .success-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .success-content {
+            flex: 1;
+        }
+
+        .success-title {
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .success-message {
+            color: #064e3b;
+            font-size: 0.875rem;
+        }
+
+        .demand-section {
+            background: #eff6ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .demand-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            color: #1e40af;
+        }
+
+        .demand-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .demand-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #1e3a8a;
+        }
+
+        .demand-company {
+            font-weight: 500;
+        }
+
+        .demand-arr {
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #f2613f;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d84315;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #f2613f;
+            border: 2px solid #f2613f;
+        }
+
+        .btn-secondary:hover {
+            background: #fef2f2;
+        }
+
+        .linear-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            text-decoration: none;
+        }
+
+        .linear-link:hover {
+            color: #f2613f;
+        }
+
+        .timeline-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .timeline-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .timeline-dot.on-track {
+            background: #22c55e;
+        }
+
+        .timeline-dot.at-risk {
+            background: #f59e0b;
+        }
+
+        .timeline-dot.delayed {
+            background: #ef4444;
+        }
+
+        .slack-notification {
+            background: #4a154b;
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .slack-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .slack-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            background: #f2613f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .slack-name {
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .slack-time {
+            color: #bbb;
+            font-size: 0.75rem;
+        }
+
+        .slack-message {
+            font-size: 0.9375rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .slack-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .slack-btn {
+            padding: 0.5rem 1rem;
+            background: #1164a3;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .slack-btn:hover {
+            background: #0d4f82;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .stat-change.positive {
+            color: #059669;
+        }
+
+        .stat-change.negative {
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>🗺️ Product Roadmap - Sales View</h1>
+                <p style="opacity: 0.9; margin-top: 0.5rem;">Live sync from Engineering (Linear) • Always up-to-date</p>
+            </div>
+            <div class="sync-badge">
+                <div class="sync-dot"></div>
+                <div>
+                    <div style="font-weight: 600;">Live Sync Active</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Last updated: 2 min ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Alert Bar -->
+        <div class="alert-bar">
+            <div class="alert-bar-icon">🔔</div>
+            <div class="alert-bar-content">
+                <div class="alert-bar-title">New: CPU Inference just shipped to GA!</div>
+                <div class="alert-bar-message">You can now sell CPU-optimized inference. Demo available, pricing updated. Reach out to TechCorp and 16 other customers who requested this.</div>
+            </div>
+            <button class="btn btn-primary" style="white-space: nowrap;">View Details</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Features Available Now</div>
+                <div class="stat-value">8</div>
+                <div class="stat-change positive">↑ 2 shipped this month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Beta Programs Open</div>
+                <div class="stat-value">3</div>
+                <div class="stat-change">Available for select customers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">In Development</div>
+                <div class="stat-value">12</div>
+                <div class="stat-change">90% on track for target quarter</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Customer Requests</div>
+                <div class="stat-value">284</div>
+                <div class="stat-change positive">↑ 18% vs last month</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active">All Features</button>
+            <button class="filter-btn">✅ Available Now (GA)</button>
+            <button class="filter-btn">🧪 Beta Available</button>
+            <button class="filter-btn">🔵 In Development</button>
+            <button class="filter-btn">💰 My Customers Want</button>
+            <button class="filter-btn">🚨 High Priority</button>
+        </div>
+
+        <!-- GA Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    ✅ Available Now (GA) - Sell with Confidence
+                    <span class="section-count">8</span>
+                </div>
+            </div>
+
+            <div class="feature-card ga">
+                <div class="feature-header">
+                    <div style="flex: 1;">
+                        <div class="feature-title">CPU Inference Optimization</div>
+                        <div class="feature-description">Run TechCo models without GPU requirements - perfect for edge deployment and cost-sensitive workloads</div>
+                    </div>
+                    <div class="feature-badges">
+                        <span class="badge badge-ga">✅ GA - Available Now</span>
+                        <span class="badge badge-confidence">Shipped: Jan 10, 2026</span>
+                    </div>
+                </div>
+
+                <div class="feature-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Sales Sellable</div>
+                        <div class="meta-value" style="color: #22c55e;">✅ YES - Sell Now</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Customer Benefit</div>
+                        <div class="meta-value">60% cost reduction for edge</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Pricing</div>
+                        <div class="meta-value">+$0.05/1M tokens</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Engineering Team</div>
+                        <div class="meta-value">Infrastructure (Sarah Chen)</div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <div class="success-icon">🎉</div>
+                    <div class="success-content">
+                        <div class="success-title">Ready to Sell</div>
+                        <div class="success-message">Demo available at demo.techco.example.com/cpu • Customer deck and pricing calculator ready • Technical FAQ prepared</div>
+                    </div>
+                </div>
+
+                <div class="demand-section">
+                    <div class="demand-title">💰 Customer Demand (18 customers requesting, $145K ARR)</div>
+                    <div class="demand-list">
+                        <div class="demand-item">
+                            <span class="demand-company">🏢 TechCorp</span>
+                            <span class="demand-arr">$12K ARR</span>
+                        </div>
+                        <div class="demand-item">
+                            <span class="demand-company">🏢 MLStartup Inc</span>
+                            <span class="demand-arr">$8.7K ARR</span>
+                        </div>
+                        <div class="demand-item">
+                            <span class="demand-company">🏢 EdgeAI Systems</span>
+                            <span class="demand-arr">$6.5K ARR</span>
+                        </div>
+                        <div class="demand-item">
+                            <span>+ 15 more customers...</span>
+                            <span class="demand-arr">$118K ARR</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="btn btn-primary">📊 View Demo</a>
+                    <a href="#" class="btn btn-secondary">📄 Customer Deck</a>
+                    <a href="#" class="btn btn-secondary">💰 Pricing Calculator</a>
+                    <a href="#" class="btn btn-secondary">📧 Email Customers (18)</a>
+                </div>
+
+                <a href="#" class="linear-link">🔗 View in Linear: MIS-234, MIS-235, MIS-236 (3 issues)</a>
+            </div>
+
+            <div class="feature-card ga">
+                <div class="feature-header">
+                    <div style="flex: 1;">
+                        <div class="feature-title">Agents API with MCP Integration</div>
+                        <div class="feature-description">Build AI agents with built-in tools - code execution, web search, image generation, and custom MCPs</div>
+                    </div>
+                    <div class="feature-badges">
+                        <span class="badge badge-ga">✅ GA - Available Now</span>
+                        <span class="badge badge-confidence">Shipped: Dec 18, 2025</span>
+                    </div>
+                </div>
+
+                <div class="feature-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Sales Sellable</div>
+                        <div class="meta-value" style="color: #22c55e;">✅ YES - Sell Now</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Customer Benefit</div>
+                        <div class="meta-value">Fastest agentic workflow setup</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Pricing</div>
+                        <div class="meta-value">Standard API rates + tool costs</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Competitive Edge</div>
+                        <div class="meta-value">MCP done "very friendly" vs others</div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <div class="success-icon">✅</div>
+                    <div class="success-content">
+                        <div class="success-title">Strong Customer Feedback</div>
+                        <div class="success-message">HN: "Solved MCP integration in a very friendly way" • Strong interest in My MCPs feature • Simple implementation path is major advantage</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="btn btn-primary">📊 View Demo</a>
+                    <a href="#" class="btn btn-secondary">📄 Customer Deck</a>
+                    <a href="#" class="btn btn-secondary">📹 Video Tutorial</a>
+                </div>
+
+                <a href="#" class="linear-link">🔗 View in Linear: MIS-189, MIS-190, MIS-191 (3 issues)</a>
+            </div>
+        </div>
+
+        <!-- Beta Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    🧪 Beta Available - Offer Early Access to Select Customers
+                    <span class="section-count">3</span>
+                </div>
+            </div>
+
+            <div class="feature-card beta">
+                <div class="feature-header">
+                    <div style="flex: 1;">
+                        <div class="feature-title">Windows Native Support</div>
+                        <div class="feature-description">Seamless installation and deployment on Windows Server environments - fixes DLL loading errors</div>
+                    </div>
+                    <div class="feature-badges">
+                        <span class="badge badge-beta">🧪 Beta Available</span>
+                        <span class="badge badge-confidence">GA Target: Feb 2026</span>
+                    </div>
+                </div>
+
+                <div class="feature-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Sales Sellable</div>
+                        <div class="meta-value" style="color: #f59e0b;">⚠️ Beta Only</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Target GA Date</div>
+                        <div class="meta-value">Q1 2026 (Mid-Feb)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Confidence Level</div>
+                        <div class="meta-value">High (90%)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Engineering Progress</div>
+                        <div class="meta-value">
+                            80% Complete (8/10 issues)
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 80%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box" style="background: #fef3c7; border-color: #fbbf24;">
+                    <div class="warning-icon" style="color: #f59e0b;">⚠️</div>
+                    <div class="warning-content">
+                        <div class="warning-title" style="color: #92400e;">Beta Status - Set Expectations</div>
+                        <div class="warning-message" style="color: #78350f;">
+                            <strong>What to say:</strong> "We have a beta program for Windows support. I can get you early access with Product approval. Full GA release planned for mid-February."<br>
+                            <strong>Don't promise:</strong> Exact GA date, production readiness, or zero bugs. Beta = expect some issues.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demand-section">
+                    <div class="demand-title">💰 Customer Demand (12 customers blocked, $1.2M ARR at risk!)</div>
+                    <div class="demand-list">
+                        <div class="demand-item">
+                            <span class="demand-company">🚨 TechCorp (CRITICAL)</span>
+                            <span class="demand-arr">$125K ARR</span>
+                        </div>
+                        <div class="demand-item">
+                            <span class="demand-company">🚨 Acme Corp (HIGH RISK)</span>
+                            <span class="demand-arr">$600K ARR</span>
+                        </div>
+                        <div class="demand-item">
+                            <span class="demand-company">🏢 GlobalFinance Corp (Prospect)</span>
+                            <span class="demand-arr">$500K ARR potential</span>
+                        </div>
+                        <div class="demand-item">
+                            <span>+ 9 more customers...</span>
+                            <span class="demand-arr">$975K ARR</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="btn btn-primary">🎯 Request Beta Access (Product Approval)</a>
+                    <a href="#" class="btn btn-secondary">📄 Technical Specs</a>
+                    <a href="#" class="btn btn-secondary">🔔 Notify Me When GA</a>
+                    <a href="#" class="btn btn-secondary">📊 View Engineering Progress</a>
+                </div>
+
+                <a href="#" class="linear-link">🔗 View in Linear: MIS-258, MIS-241, MIS-239 (8/10 issues done)</a>
+            </div>
+        </div>
+
+        <!-- In Development Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    🔵 In Development - Set Expectations, Don't Promise
+                    <span class="section-count">12</span>
+                </div>
+            </div>
+
+            <div class="feature-card in-dev">
+                <div class="feature-header">
+                    <div style="flex: 1;">
+                        <div class="feature-title">Magistral Reasoning Improvements (v2)</div>
+                        <div class="feature-description">Fix infinite thinking loops, expand context window to 200K+, improve response quality and creativity</div>
+                    </div>
+                    <div class="feature-badges">
+                        <span class="badge badge-in-dev">🔵 In Development</span>
+                        <span class="badge badge-confidence">⚠️ Medium Confidence (60%)</span>
+                        <span class="timeline-indicator">
+                            <span class="timeline-dot at-risk"></span>
+                            At Risk (Complex Work)
+                        </span>
+                    </div>
+                </div>
+
+                <div class="feature-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Sales Sellable</div>
+                        <div class="meta-value" style="color: #dc2626;">❌ NO - Not Ready</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Target Quarter</div>
+                        <div class="meta-value">Q2 2026 (Tentative)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Confidence Level</div>
+                        <div class="meta-value">Medium (60%)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Engineering Progress</div>
+                        <div class="meta-value">
+                            20% Complete (2/10 issues)
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 20%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-icon">🚨</div>
+                    <div class="warning-content">
+                        <div class="warning-title">⚠️ DO NOT COMMIT TO TIMELINE - Complex ML Work</div>
+                        <div class="warning-message">
+                            <strong>What to say:</strong> "We're actively working on significant improvements to Magistral reasoning. Target is Q2 2026, but this is complex ML work so timeline may shift. I'll keep you updated."<br>
+                            <strong>DON'T say:</strong> "It'll be ready in Q2" or make any firm promises. Engineering advises this is complex with uncertainty.<br>
+                            <strong>Engineering note:</strong> "Found edge cases during development. Ensuring quality over speed. Use Q2 as guideline only, not commitment."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demand-section">
+                    <div class="demand-title">📊 Customer Demand (67 customers frustrated, REPUTATION ISSUE)</div>
+                    <div class="demand-list">
+                        <div class="demand-item">
+                            <span class="demand-company">Community Feedback</span>
+                            <span style="color: #dc2626; font-weight: 600;">156 upvotes on Reddit</span>
+                        </div>
+                        <div class="demand-item">
+                            <span>Main complaints: Infinite loops, 128K context too small, responses not creative</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="btn btn-secondary">📋 View Customer Feedback</a>
+                    <a href="#" class="btn btn-secondary">🔔 Notify Me of Updates</a>
+                    <a href="#" class="btn btn-secondary">💬 Talk to Product Team</a>
+                </div>
+
+                <a href="#" class="linear-link">🔗 View in Linear: MIS-267, MIS-268 (2/10 issues done) • ML Research team</a>
+            </div>
+
+            <div class="feature-card in-dev">
+                <div class="feature-header">
+                    <div style="flex: 1;">
+                        <div class="feature-title">Documentation Overhaul</div>
+                        <div class="feature-description">Match OpenAI docs quality - more examples, better search, video tutorials, migration guides</div>
+                    </div>
+                    <div class="feature-badges">
+                        <span class="badge badge-in-dev">🔵 In Development</span>
+                        <span class="badge badge-confidence">High Confidence (85%)</span>
+                        <span class="timeline-indicator">
+                            <span class="timeline-dot on-track"></span>
+                            On Track
+                        </span>
+                    </div>
+                </div>
+
+                <div class="feature-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Target Date</div>
+                        <div class="meta-value">Q1 2026 (March)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Confidence Level</div>
+                        <div class="meta-value">High (85%)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Engineering Progress</div>
+                        <div class="meta-value">
+                            45% Complete (9/20 pages)
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Customer Impact</div>
+                        <div class="meta-value">Reduce support 25%, improve NPS</div>
+                    </div>
+                </div>
+
+                <div class="success-box" style="background: #eff6ff; border-color: #93c5fd;">
+                    <div class="success-icon" style="color: #1e40af;">ℹ️</div>
+                    <div class="success-content">
+                        <div class="success-title" style="color: #1e3a8a;">On Track for Q1 - Safe to Mention</div>
+                        <div class="success-message" style="color: #1e40af;">
+                            <strong>What to say:</strong> "We're launching a major docs overhaul in Q1 2026. It'll include more code examples, video tutorials, and better search - matching OpenAI's quality."<br>
+                            High confidence (85%) - engineering is ahead of schedule. Safe to set expectations.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demand-section">
+                    <div class="demand-title">📊 Customer Demand (234 mentions, top pain point)</div>
+                    <div class="demand-list">
+                        <div class="demand-item">
+                            <span>Current rating: 3.2/5 (vs OpenAI 4.5/5) - biggest gap to close</span>
+                        </div>
+                        <div class="demand-item">
+                            <span>"Took 3 hours to figure out embeddings" - "Need production examples" - "Sparse docs"</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="btn btn-secondary">📊 View Engineering Progress</a>
+                    <a href="#" class="btn btn-secondary">🔔 Notify Me When Live</a>
+                </div>
+
+                <a href="#" class="linear-link">🔗 View in Linear: MIS-301 to MIS-320 (9/20 pages done) • DevRel team</a>
+            </div>
+        </div>
+
+        <!-- Research Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    🔬 Research - Exploring, No Timeline Yet
+                    <span class="section-count">5</span>
+                </div>
+            </div>
+
+            <div class="feature-card research">
+                <div class="feature-header">
+                    <div style="flex: 1;">
+                        <div class="feature-title">Multi-modal Capabilities (Vision + Text)</div>
+                        <div class="feature-description">Analyze images, charts, PDFs, and documents alongside text - compete with GPT-4V and Claude 3</div>
+                    </div>
+                    <div class="feature-badges">
+                        <span class="badge badge-research">🔬 Research</span>
+                        <span class="badge badge-confidence">⚠️ Low Confidence (30%)</span>
+                    </div>
+                </div>
+
+                <div class="feature-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Sales Sellable</div>
+                        <div class="meta-value" style="color: #dc2626;">❌ NO - Research Only</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Target Quarter</div>
+                        <div class="meta-value">TBD (Uncertain)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Confidence Level</div>
+                        <div class="meta-value">Low (30%)</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Status</div>
+                        <div class="meta-value">Research spike in progress</div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-icon">🚨</div>
+                    <div class="warning-content">
+                        <div class="warning-title">⚠️ RESEARCH ONLY - DO NOT CREATE EXPECTATIONS</div>
+                        <div class="warning-message">
+                            <strong>What to say:</strong> "Multi-modal capabilities are on our radar. We're exploring feasibility, but we don't have a timeline yet. I'll let you know if this moves forward."<br>
+                            <strong>NEVER say:</strong> "It's coming soon" or "We're building it" or give ANY timeline. This is pure research - may or may not ship.<br>
+                            <strong>Engineering note:</strong> "Exploratory phase. Assessing technical feasibility, market demand, and resource requirements. No commitment to build yet."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demand-section">
+                    <div class="demand-title">💰 Customer Demand (12 champion users, $420K ARR expansion opportunity)</div>
+                    <div class="demand-list">
+                        <div class="demand-item">
+                            <span class="demand-company">🏢 Champion Users (Health >85)</span>
+                            <span class="demand-arr">Potential +$200K upsell</span>
+                        </div>
+                        <div class="demand-item">
+                            <span>Strong signal: Champion users want this, expansion opportunity if we build it</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="btn btn-secondary">💬 Provide Customer Feedback to Product</a>
+                    <a href="#" class="btn btn-secondary">🔔 Notify Me if This Moves Forward</a>
+                </div>
+
+                <a href="#" class="linear-link">🔗 View in Linear: MIS-401 (Research spike) • ML Research team</a>
+            </div>
+        </div>
+
+        <!-- Slack Notification Examples -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    📬 Recent Slack Notifications (Last 7 Days)
+                </div>
+            </div>
+
+            <div class="slack-notification">
+                <div class="slack-header">
+                    <div class="slack-avatar">🤖</div>
+                    <div style="flex: 1;">
+                        <div class="slack-name">TechCo Roadmap Bot</div>
+                        <div class="slack-time">2 days ago at 10:15 AM</div>
+                    </div>
+                </div>
+                <div class="slack-message">
+                    🎉 <strong>CPU Inference is now GA!</strong><br><br>
+                    Sales can start selling CPU-optimized inference today.<br><br>
+                    <strong>What it is:</strong> Run TechCo models without GPU requirements<br>
+                    <strong>Customer benefit:</strong> 60% cost reduction for edge deployments<br>
+                    <strong>Pricing:</strong> +$0.05/1M tokens vs GPU pricing<br>
+                    <strong>Demo:</strong> https://demo.techco.example.com/cpu<br><br>
+                    <strong>Action Items:</strong><br>
+                    ✅ Update pitch decks (new slides in Google Drive)<br>
+                    ✅ Reach out to these customers who requested it:<br>
+                       • TechCorp ($125K) - John spoke with them 2 weeks ago<br>
+                       • MLStartup ($8K) - High growth, expansion opportunity<br>
+                       • 16 others (see Linear)<br><br>
+                    Questions? Ping @sarah-pm
+                </div>
+                <div class="slack-actions">
+                    <button class="slack-btn">View Demo</button>
+                    <button class="slack-btn">Customer Deck</button>
+                    <button class="slack-btn">Email Customers</button>
+                </div>
+            </div>
+
+            <div class="slack-notification">
+                <div class="slack-header">
+                    <div class="slack-avatar">⚠️</div>
+                    <div style="flex: 1;">
+                        <div class="slack-name">TechCo Roadmap Bot</div>
+                        <div class="slack-time">5 days ago at 9:00 AM</div>
+                    </div>
+                </div>
+                <div class="slack-message">
+                    ⚠️ <strong>TIMELINE CHANGE: Magistral v2 confidence lowered to 60%</strong><br><br>
+                    Engineering found additional edge cases during development. Still targeting Q2 2026 but timeline may shift.<br><br>
+                    <strong>Affected deals:</strong><br>
+                    • GlobalFinance - was expecting Q2, need to reset expectations<br>
+                    • 3 other prospects mentioned this in recent calls<br><br>
+                    <strong>What to say:</strong> "We're making significant improvements to Magistral reasoning. Target is Q2 2026, but this is complex ML work so timeline may shift. Quality over speed - I'll keep you updated."<br><br>
+                    <strong>DON'T promise:</strong> Any firm dates. Use "Q2 as guideline" language.<br><br>
+                    Engineering note: "Ensuring quality. Don't rush us on this one - it's critical we get it right."
+                </div>
+                <div class="slack-actions">
+                    <button class="slack-btn">View Linear</button>
+                    <button class="slack-btn">Update Deals</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

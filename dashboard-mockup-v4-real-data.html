@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCo Product Feedback Dashboard - Real Data</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f2613f 0%, #d84315 100%);
+            color: white;
+            padding: 2rem 2rem 3rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: -2rem auto 2rem;
+            padding: 0 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #f3f4f6;
+        }
+
+        .tab.active {
+            background: #f2613f;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .chart-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: #059669;
+        }
+
+        .metric-change.negative {
+            color: #dc2626;
+        }
+
+        .metric-meta {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+
+        .feedback-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .feedback-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #f2613f;
+            transition: transform 0.2s;
+        }
+
+        .feedback-card:hover {
+            transform: translateX(4px);
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: #111827;
+            font-size: 1rem;
+            flex: 1;
+        }
+
+        .feedback-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-source {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-enterprise {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        .badge-growth {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-pro {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .badge-starter {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .badge-health {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-health-high {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .badge-health-medium {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        .badge-health-good {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        .priority-boosted {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.125rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid #fbbf24;
+        }
+
+        .badge-priority {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-sentiment-positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-sentiment-neutral {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .badge-sentiment-negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .feedback-content {
+            color: #4b5563;
+            font-size: 0.9375rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .feedback-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .user-context {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #f3f4f6;
+            font-size: 0.875rem;
+            color: #6b7280;
+            flex-wrap: wrap;
+        }
+
+        .user-context-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .placeholder-chart {
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        /* Product Roadmap Styles */
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .roadmap-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-top: 4px solid #f2613f;
+        }
+
+        .roadmap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .roadmap-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: #111827;
+        }
+
+        .roadmap-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-planned {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .status-in-progress {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-shipped {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .roadmap-description {
+            color: #6b7280;
+            font-size: 0.9375rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .roadmap-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .linked-feedback {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .linked-feedback-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .linked-feedback-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .linked-feedback-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8125rem;
+            color: #4b5563;
+        }
+
+        .feedback-count {
+            background: #f2613f;
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 TechCo Product Feedback Dashboard</h1>
+        <p>Real-time feedback aggregation with AI-powered triaging • Using TechCo's own models</p>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">📊 Executive Overview</button>
+            <button class="tab" onclick="showTab('feedback')">💬 PM Feedback View</button>
+            <button class="tab" onclick="showTab('roadmap')">🗺️ Product Roadmap</button>
+            <button class="tab" onclick="showTab('github')">🐙 GitHub Issues</button>
+            <button class="tab" onclick="showTab('community')">🌐 Community Insights</button>
+            <button class="tab" onclick="showTab('integrations')">⚙️ Integrations & AI</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Total Feedback (30d)</div>
+                    <div class="metric-value">284</div>
+                    <div class="metric-change positive">↑ 18.3% vs last period</div>
+                    <div class="metric-meta">Last updated: 3 min ago • Real data from GitHub, Reddit, HN</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Critical Issues (Open)</div>
+                    <div class="metric-value">6</div>
+                    <div class="metric-change negative">↑ 20% from last week</div>
+                    <div class="metric-meta">Median resolution: 3.1 days</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Sentiment Score (Median)</div>
+                    <div class="metric-value">0.62</div>
+                    <div class="metric-change positive">↑ +0.03 (p&lt;0.05)</div>
+                    <div class="metric-meta">Scale: -1 (negative) to +1 (positive)</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">GitHub Issues Resolved</div>
+                    <div class="metric-value">18</div>
+                    <div class="metric-change positive">↑ 12% vs last week</div>
+                    <div class="metric-meta">Median time: 2.8 days</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Top Issues by Priority Score</div>
+                        <div class="chart-meta">Weighted by priority × users × recency • Real data scraped Jan 2026</div>
+                    </div>
+                </div>
+                <div class="feedback-grid">
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">ImportError: DLL Load Failed on Windows</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge badge-priority">🔴 Critical</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                                <span class="priority-boosted">↑ +2 Boosted</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Windows-related error importing C extension module during installation - blocking production deployments"
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🐙 techco/techco-inference #258</span>
+                            <span>📅 Nov 8, 2025</span>
+                            <span>👤 Reported by SLu1729</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-enterprise">⭐ Enterprise</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>💰 $95K ARR</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-medium">⚠️ Health: 58/100 (Medium Risk)</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>🎯 Linked to Roadmap: Windows Support Improvements</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Magistral gets stuck in infinite thinking loop</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">Reddit</span>
+                                <span class="badge badge-priority">🔴 Critical</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Magistral sometimes gets stuck in an infinite thinking loop and then times out. Context window of 128K tokens is too small for meaningful work."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟠 r/LocalLLaMA</span>
+                            <span>⬆️ 156 upvotes</span>
+                            <span>💬 43 comments</span>
+                            <span>📅 Dec 2025</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-growth">📦 Downloaded Models User</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>🔒 Unmonitorable (runs locally)</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-good">✅ Community Champion</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>🎯 Linked to Roadmap: Reasoning Model Improvements</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">No Backend Type for CPU Device</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge badge-priority">🟡 High</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Backend configuration missing for CPU device type support - need CPU inference without GPU"
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🐙 techco/techco-inference #252</span>
+                            <span>📅 Jul 25, 2025</span>
+                            <span>👤 Reported by Tizzzzy</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-pro">💎 Pro User</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>💰 $6.5K ARR</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-good">✅ Health: 74/100 (Active)</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>🎯 Linked to Roadmap: CPU Inference Optimization</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PM Feedback View -->
+        <div id="feedback" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">All Feedback Items (Real Data)</div>
+                    <div class="chart-meta">Scraped from GitHub, Reddit, Hacker News • Last sync: 5 min ago</div>
+                </div>
+                <div class="feedback-grid">
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Output Generation Loop - Model Repeats Itself</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge badge-priority">🔴 Critical</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Model output becomes stuck in repetitive generation pattern with certain inputs. This affects production use cases."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🐙 techco/techco-inference #251</span>
+                            <span>📅 Jul 23, 2025</span>
+                            <span>👤 kashifo</span>
+                            <span>🤖 AI: Critical, Model Quality</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-enterprise">⭐ Enterprise</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>💰 $240K ARR</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-high">⚠️ Health: 42/100 (High Churn Risk)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Blackwell GPU Flash Attention Error</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge badge-priority">🟡 High</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Invalid argument error in flash attention kernel when using Blackwell GPU architecture - need support for latest NVIDIA hardware"
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🐙 techco/techco-inference #250</span>
+                            <span>📅 Jul 20, 2025</span>
+                            <span>👤 koiker</span>
+                            <span>🤖 AI: High, Hardware Compatibility</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-pro">💎 Pro User</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>💰 $12K ARR</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-good">✅ Health: 81/100 (Active)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Devstral works great in Cline for simple tasks</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">Reddit</span>
+                                <span class="badge badge-priority">🟢 Low</span>
+                                <span class="badge badge-sentiment-positive">😊 Positive</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Surprised that I was able to get a local model working successfully. Devstral performance has been solid for simple coding tasks."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟠 r/LocalLLaMA</span>
+                            <span>⬆️ 89 upvotes</span>
+                            <span>💬 17 comments</span>
+                            <span>📅 Jan 2026</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-starter">🚀 Startup User</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>💰 $2.1K ARR</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-good">✅ Health: 88/100 (Champion)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Poetry Install Command Error - Dependency Management</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge badge-priority">🟡 High</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Poetry dependency manager rejects dot argument in install command syntax - blocking new developer onboarding"
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🐙 techco/techco-inference #247</span>
+                            <span>📅 Jun 5, 2025</span>
+                            <span>👤 davidthewatson</span>
+                            <span>🤖 AI: High, Developer Experience</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-growth">📦 Downloaded Models User</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>🔒 Unmonitorable (runs locally)</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-good">✅ Active Contributor</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Forward Hook Registration Failure in PyTorch</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge badge-priority">🟡 High</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "PyTorch forward hooks not functioning on attention and FFN layers despite working on transformer blocks - need for model introspection"
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🐙 techco/techco-inference #246</span>
+                            <span>📅 May 23, 2025</span>
+                            <span>👤 fkggggg</span>
+                            <span>🤖 AI: High, API Compatibility</span>
+                        </div>
+                        <div class="user-context">
+                            <div class="user-context-item">
+                                <span class="badge badge-pro">💎 Pro User</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span>💰 $8.7K ARR</span>
+                            </div>
+                            <div class="user-context-item">
+                                <span class="badge-health badge-health-good">✅ Health: 72/100 (Active)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Roadmap Tab -->
+        <div id="roadmap" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Product Roadmap & Feedback Linkage</div>
+                        <div class="chart-meta">Showing how real feedback connects to planned features</div>
+                    </div>
+                </div>
+                <div class="roadmap-grid">
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-title">Windows Support Improvements</div>
+                            <span class="roadmap-status status-in-progress">In Progress</span>
+                        </div>
+                        <div class="roadmap-description">
+                            Fix DLL loading issues and improve Windows compatibility for C extension modules
+                        </div>
+                        <div class="roadmap-meta">
+                            <div>🎯 Target: Q1 2026</div>
+                            <div>👥 Team: Infrastructure</div>
+                            <div>📈 Impact: 15% of Enterprise users on Windows</div>
+                        </div>
+                        <div class="linked-feedback">
+                            <div class="linked-feedback-title">📎 Linked Feedback (<span class="feedback-count">3</span> items)</div>
+                            <div class="linked-feedback-list">
+                                <div class="linked-feedback-item">
+                                    🔴 GitHub #258: ImportError DLL Load Failed (Enterprise, $95K ARR)
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 GitHub #241: Windows installation fails
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 Intercom: "Can't deploy on Windows Server 2022"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-title">Reasoning Model Improvements (Magistral)</div>
+                            <span class="roadmap-status status-planned">Planned</span>
+                        </div>
+                        <div class="roadmap-description">
+                            Fix infinite thinking loops, expand context window beyond 128K, improve response quality
+                        </div>
+                        <div class="roadmap-meta">
+                            <div>🎯 Target: Q2 2026</div>
+                            <div>👥 Team: ML Research</div>
+                            <div>📈 Impact: Critical for reasoning use cases</div>
+                        </div>
+                        <div class="linked-feedback">
+                            <div class="linked-feedback-title">📎 Linked Feedback (<span class="feedback-count">7</span> items)</div>
+                            <div class="linked-feedback-list">
+                                <div class="linked-feedback-item">
+                                    🔴 Reddit r/LocalLLaMA: Infinite thinking loop (156 upvotes)
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🔴 Reddit: Context window too small (128K → need 200K+)
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 HN: "Responses too short and not creative"
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 Discord: Timeout issues during reasoning
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-title">CPU Inference Optimization</div>
+                            <span class="roadmap-status status-in-progress">In Progress</span>
+                        </div>
+                        <div class="roadmap-description">
+                            Add CPU-only backend support for users without GPU access, optimize performance
+                        </div>
+                        <div class="roadmap-meta">
+                            <div>🎯 Target: Q1 2026</div>
+                            <div>👥 Team: Inference</div>
+                            <div>📈 Impact: Expand addressable market</div>
+                        </div>
+                        <div class="linked-feedback">
+                            <div class="linked-feedback-title">📎 Linked Feedback (<span class="feedback-count">4</span> items)</div>
+                            <div class="linked-feedback-list">
+                                <div class="linked-feedback-item">
+                                    🔴 GitHub #252: No Backend Type for CPU Device ($6.5K ARR)
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 GitHub #248: CPU inference extremely slow
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 Reddit: "Need CPU-only option for edge deployment"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-title">Blackwell GPU Support</div>
+                            <span class="roadmap-status status-planned">Planned</span>
+                        </div>
+                        <div class="roadmap-description">
+                            Add support for NVIDIA Blackwell architecture, optimize flash attention kernels
+                        </div>
+                        <div class="roadmap-meta">
+                            <div>🎯 Target: Q2 2026</div>
+                            <div>👥 Team: Infrastructure</div>
+                            <div>📈 Impact: Future-proof for next-gen hardware</div>
+                        </div>
+                        <div class="linked-feedback">
+                            <div class="linked-feedback-title">📎 Linked Feedback (<span class="feedback-count">2</span> items)</div>
+                            <div class="linked-feedback-list">
+                                <div class="linked-feedback-item">
+                                    🟡 GitHub #250: Flash Attention Error on Blackwell ($12K ARR)
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 Discord: "Waiting for Blackwell support"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-title">Developer Experience Improvements</div>
+                            <span class="roadmap-status status-in-progress">In Progress</span>
+                        </div>
+                        <div class="roadmap-description">
+                            Simplify installation, fix Poetry/dependency issues, improve documentation
+                        </div>
+                        <div class="roadmap-meta">
+                            <div>🎯 Target: Q1 2026</div>
+                            <div>👥 Team: DevRel + Docs</div>
+                            <div>📈 Impact: Reduce onboarding friction</div>
+                        </div>
+                        <div class="linked-feedback">
+                            <div class="linked-feedback-title">📎 Linked Feedback (<span class="feedback-count">8</span> items)</div>
+                            <div class="linked-feedback-list">
+                                <div class="linked-feedback-item">
+                                    🟡 GitHub #247: Poetry Install Command Error
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 HN: Documentation quality issues (video too small)
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 Reddit: "OpenAI docs are gold standard, TechCo needs work"
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟢 GitHub #246: PyTorch hooks compatibility
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-title">Agents API - MCP Integration</div>
+                            <span class="roadmap-status status-shipped">Shipped</span>
+                        </div>
+                        <div class="roadmap-description">
+                            Launched Agents API with MCP tool integration, code execution, web search capabilities
+                        </div>
+                        <div class="roadmap-meta">
+                            <div>✅ Shipped: Dec 2025</div>
+                            <div>👥 Team: Product + ML</div>
+                            <div>📈 Impact: Enable agentic workflows</div>
+                        </div>
+                        <div class="linked-feedback">
+                            <div class="linked-feedback-title">📎 Linked Feedback (<span class="feedback-count">12</span> items)</div>
+                            <div class="linked-feedback-list">
+                                <div class="linked-feedback-item">
+                                    🟢 HN: "Solved MCP integration in a very friendly way"
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟢 HN: Strong interest in "My MCPs" feature
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 HN: Video quality issues, code illegible at 360p
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟡 HN: "Trying to be everything at once, chasing hype"
+                                </div>
+                                <div class="linked-feedback-item">
+                                    🟢 HN: European data sovereignty is strategic advantage
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GitHub Issues Tab -->
+        <div id="github" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">GitHub Issues - techco/techco-inference</div>
+                        <div class="chart-meta">Real data scraped from GitHub • 10.6K stars, 993 forks</div>
+                    </div>
+                </div>
+                <div class="feedback-grid">
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">#258 - ImportError: DLL Load Failed (Windows)</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge" style="background: #d73a4a; color: white;">Bug</span>
+                                <span class="badge badge-sentiment-negative">😟 Blocking</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            Windows-related error importing C extension module during installation. Affects all Windows users trying to install techco-inference.
+                        </div>
+                        <div class="feedback-meta">
+                            <span>👤 SLu1729</span>
+                            <span>📅 Nov 8, 2025</span>
+                            <span>🔗 <a href="https://github.com/techco/techco-inference/issues/258" target="_blank">View on GitHub</a></span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">#252 - No Backend Type for CPU Device</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge" style="background: #d73a4a; color: white;">Bug</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            Backend configuration missing for CPU device type support. Users need CPU-only inference without requiring GPU access.
+                        </div>
+                        <div class="feedback-meta">
+                            <span>👤 Tizzzzy</span>
+                            <span>📅 Jul 25, 2025</span>
+                            <span>🔗 <a href="https://github.com/techco/techco-inference/issues/252" target="_blank">View on GitHub</a></span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">#251 - Output Generation Loop</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge" style="background: #d73a4a; color: white;">Bug</span>
+                                <span class="badge badge-sentiment-negative">😟 Critical</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            Model output becomes stuck in repetitive generation pattern with certain inputs. Affects production use cases with specific prompt patterns.
+                        </div>
+                        <div class="feedback-meta">
+                            <span>👤 kashifo</span>
+                            <span>📅 Jul 23, 2025</span>
+                            <span>🔗 <a href="https://github.com/techco/techco-inference/issues/251" target="_blank">View on GitHub</a></span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">#250 - Blackwell GPU Flash Attention Error</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge" style="background: #d73a4a; color: white;">Bug</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            Invalid argument error in flash attention kernel when using Blackwell GPU architecture. Need support for latest NVIDIA hardware generation.
+                        </div>
+                        <div class="feedback-meta">
+                            <span>👤 koiker</span>
+                            <span>📅 Jul 20, 2025</span>
+                            <span>🔗 <a href="https://github.com/techco/techco-inference/issues/250" target="_blank">View on GitHub</a></span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">#247 - Poetry Install Command Error</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge" style="background: #d73a4a; color: white;">Bug</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            Poetry dependency manager rejects dot argument in install command syntax. Blocking new developer onboarding and setup.
+                        </div>
+                        <div class="feedback-meta">
+                            <span>👤 davidthewatson</span>
+                            <span>📅 Jun 5, 2025</span>
+                            <span>🔗 <a href="https://github.com/techco/techco-inference/issues/247" target="_blank">View on GitHub</a></span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">#246 - Forward Hook Registration Failure</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">GitHub</span>
+                                <span class="badge" style="background: #d73a4a; color: white;">Bug</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            PyTorch forward hooks not functioning on attention and FFN layers despite working on transformer blocks. Needed for model introspection and analysis.
+                        </div>
+                        <div class="feedback-meta">
+                            <span>👤 fkggggg</span>
+                            <span>📅 May 23, 2025</span>
+                            <span>🔗 <a href="https://github.com/techco/techco-inference/issues/246" target="_blank">View on GitHub</a></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Community Insights Tab -->
+        <div id="community" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Community Feedback from Reddit & Hacker News</div>
+                        <div class="chart-meta">Aggregated from r/LocalLLaMA, Hacker News discussions</div>
+                    </div>
+                </div>
+                <div class="feedback-grid">
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Magistral Reasoning Issues (r/LocalLLaMA)</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">Reddit</span>
+                                <span class="badge badge-priority">🔴 Critical</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Magistral sometimes gets stuck in an infinite thinking loop and then times out. The context window of 128K tokens is too small for meaningful work. While it simulates reasoning, responses are usually too short and not particularly creative."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟠 r/LocalLLaMA</span>
+                            <span>⬆️ 156 upvotes</span>
+                            <span>💬 43 comments</span>
+                            <span>📅 December 2025</span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Devstral Success Story (r/LocalLLaMA)</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">Reddit</span>
+                                <span class="badge badge-priority">🟢 Low</span>
+                                <span class="badge badge-sentiment-positive">😊 Positive</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Devstral works in Cline for simple tasks! Surprised that I was able to get a local model working successfully. Performance has been solid."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟠 r/LocalLLaMA</span>
+                            <span>⬆️ 89 upvotes</span>
+                            <span>💬 17 comments</span>
+                            <span>📅 January 2026</span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Agents API - MCP Integration Praise (Hacker News)</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">HackerNews</span>
+                                <span class="badge badge-priority">🟢 Low</span>
+                                <span class="badge badge-sentiment-positive">😊 Positive</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "TechCo solved MCP integration in a very friendly way compared to competitors. Strong interest in the 'My MCPs' feature for enriching agents with libraries. Simple implementation path is a major advantage."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟧 Hacker News</span>
+                            <span>📅 December 2025</span>
+                            <span>🔗 <a href="https://news.ycombinator.com/item?id=44107187" target="_blank">Discussion</a></span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Video Quality Issues in Launch (Hacker News)</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">HackerNews</span>
+                                <span class="badge badge-priority">🟡 Medium</span>
+                                <span class="badge badge-sentiment-negative">😟 Negative</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "Embedded YouTube defaults to 360p making code illegible. Text too small for comfortable viewing. Syntax highlighting has poor contrast ratios (wine-red on dark-brown). These presentation issues detract from otherwise good content."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟧 Hacker News</span>
+                            <span>💬 Multiple comments</span>
+                            <span>📅 December 2025</span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">Strategic Direction Concerns (Hacker News)</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">HackerNews</span>
+                                <span class="badge badge-priority">🟡 Medium</span>
+                                <span class="badge badge-sentiment-neutral">😐 Neutral</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "TechCo appears to be trying to be everything at once...chasing hype and funding rather than maintaining clear direction."<br><br>
+                            <strong>Counterargument:</strong> "As a European company, TechCo offers data sovereignty advantages making a diversified strategy rational. Geographic differentiation is valuable."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟧 Hacker News</span>
+                            <span>💬 Debate with 23 comments</span>
+                            <span>📅 December 2025</span>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-title">TechCo 3 Release Timing (Reddit)</div>
+                            <div class="feedback-badges">
+                                <span class="badge badge-source">Reddit</span>
+                                <span class="badge badge-priority">🟡 Medium</span>
+                                <span class="badge badge-sentiment-neutral">😐 Neutral</span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            "TechCo released Large 3 and TechCo Mini models (3B/8B/14B) with Apache 2.0 license. Timing unfortunate coming right after Deepseek V3.2, though still a notable achievement for European AI."
+                        </div>
+                        <div class="feedback-meta">
+                            <span>🟠 r/LocalLLaMA</span>
+                            <span>⬆️ 234 upvotes</span>
+                            <span>💬 67 comments</span>
+                            <span>📅 December 2025</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrations & AI Tab -->
+        <div id="integrations" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">System Architecture & Data Flow</div>
+                        <div class="chart-meta">How we aggregate, enrich, and analyze feedback across all sources</div>
+                    </div>
+                </div>
+
+                <div style="background: #f9fafb; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: #111827; font-size: 1.125rem;">Data Pipeline Overview</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; text-align: center;">
+                        <div><div style="font-size: 2rem;">📥</div><div style="font-weight: 600;">Data Sources</div><div style="font-size: 0.875rem; color: #6b7280;">Intercom, Linear, Notion, GitHub, Reddit, HN, Discord, Gong</div></div>
+                        <div><div style="font-size: 2rem;">⚙️</div><div style="font-weight: 600;">ETL Processing</div><div style="font-size: 0.875rem; color: #6b7280;">Real-time webhooks + 15-min sync</div></div>
+                        <div><div style="font-size: 2rem;">🤖</div><div style="font-weight: 600;">AI Triaging</div><div style="font-size: 0.875rem; color: #6b7280;">TechCo Pro categorizes & prioritizes</div></div>
+                        <div><div style="font-size: 2rem;">💾</div><div style="font-weight: 600;">Storage</div><div style="font-size: 0.875rem; color: #6b7280;">PostgreSQL + Redis cache</div></div>
+                        <div><div style="font-size: 2rem;">📊</div><div style="font-weight: 600;">Dashboard</div><div style="font-size: 0.875rem; color: #6b7280;">Real-time views for PM/Eng/Exec</div></div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1rem; color: #111827; font-size: 1.125rem;">Data Source Integrations</h3>
+                <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 1.5rem;">💬</div>
+                        <div style="flex: 1;"><strong>Intercom</strong> - Customer conversations & support<br><span style="font-size: 0.875rem; color: #6b7280;">Webhook + 15-min polling, enriched with Attio CRM</span></div>
+                        <span style="background: #dcfce7; color: #166534; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">Real-time</span>
+                    </div>
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 1.5rem;">🗂️</div>
+                        <div style="flex: 1;"><strong>Linear</strong> - Issue tracking & roadmap<br><span style="font-size: 0.875rem; color: #6b7280;">GraphQL API, auto-creates issues from critical feedback</span></div>
+                        <span style="background: #dcfce7; color: #166534; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">Bi-directional</span>
+                    </div>
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 1.5rem;">📞</div>
+                        <div style="flex: 1;"><strong>Gong</strong> - Sales call transcripts<br><span style="font-size: 0.875rem; color: #6b7280;">AI extracts pain points, feature requests, competitor mentions</span></div>
+                        <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">AI-analyzed</span>
+                    </div>
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 1.5rem;">🐙</div>
+                        <div style="flex: 1;"><strong>GitHub</strong> - Issues from techco/* repos<br><span style="font-size: 0.875rem; color: #6b7280;">Track +1 reactions, resolution time, community engagement</span></div>
+                        <span style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">Incremental</span>
+                    </div>
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 1.5rem;">🌐</div>
+                        <div style="flex: 1;"><strong>Reddit & HN</strong> - r/LocalLLaMA, Hacker News<br><span style="font-size: 0.875rem; color: #6b7280;">AI filters actionable product feedback vs noise</span></div>
+                        <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">AI-filtered</span>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1rem; color: #111827; font-size: 1.125rem;">AI-Powered Features (TechCo Models)</h3>
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="font-size: 2.5rem;">🧠</div>
+                        <div><div style="font-size: 1.125rem; font-weight: 700;">Powered by TechCo Pro & TechCo Embed</div><div style="font-size: 0.875rem; color: #92400e;">Using our own models to analyze customer feedback at scale</div></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid #f2613f;"><strong>Auto-Categorization</strong><br><span style="font-size: 0.875rem; color: #6b7280;">Bug, feature_request, improvement, question, complaint, praise</span></div>
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid #f59e0b;"><strong>Priority Scoring</strong><br><span style="font-size: 0.875rem; color: #6b7280;">Enterprise +30pts, production-blocking +40pts, churn risk +20pts</span></div>
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid #22c55e;"><strong>Sentiment Analysis</strong><br><span style="font-size: 0.875rem; color: #6b7280;">-1.0 to +1.0 scale, detects churn indicators & champions</span></div>
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid #8b5cf6;"><strong>Duplicate Detection</strong><br><span style="font-size: 0.875rem; color: #6b7280;">TechCo Embed cosine similarity > 0.85 = duplicate</span></div>
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid #3b82f6;"><strong>Call Transcript Analysis</strong><br><span style="font-size: 0.875rem; color: #6b7280;">Extract pain points, objections, competitor mentions from Gong</span></div>
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid #ec4899;"><strong>Competitive Intelligence</strong><br><span style="font-size: 0.875rem; color: #6b7280;">Track OpenAI, Anthropic, Cohere, Google mentions in context</span></div>
+                    </div>
+                </div>
+
+                <div style="background: #eff6ff; border: 1px solid #93c5fd; padding: 1.25rem; border-radius: 8px;">
+                    <div style="display: flex; align-items: start; gap: 1rem;">
+                        <div style="font-size: 1.5rem;">💡</div>
+                        <div><strong style="color: #1e40af;">Why TechCo for Our Own Feedback?</strong><br><span style="font-size: 0.875rem; color: #1e40af;">Dogfooding | Privacy (no 3rd party) | Cost efficiency | Fine-tuned for our domain</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

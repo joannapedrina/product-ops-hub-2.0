@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCo Product Feedback Dashboard - Strategic Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f2613f 0%, #d84315 100%);
+            color: white;
+            padding: 2rem 2rem 3rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: -2rem auto 2rem;
+            padding: 0 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #f3f4f6;
+        }
+
+        .tab.active {
+            background: #f2613f;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .chart-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 1rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: #059669;
+        }
+
+        .metric-change.negative {
+            color: #dc2626;
+        }
+
+        .metric-meta {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+
+        /* RICE Scoring Table */
+        .rice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .rice-table th,
+        .rice-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .rice-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .rice-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .rice-score {
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        .rice-score.high {
+            color: #059669;
+        }
+
+        .rice-score.medium {
+            color: #d97706;
+        }
+
+        .rice-score.low {
+            color: #6b7280;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .priority-p0 {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .priority-p1 {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-p2 {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Kano Model Quadrant */
+        .kano-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1rem;
+            height: 500px;
+            margin-top: 1rem;
+        }
+
+        .kano-quadrant {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .kano-quadrant h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .kano-delighter {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-color: #6ee7b7;
+        }
+
+        .kano-performance {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #fbbf24;
+        }
+
+        .kano-basic {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-color: #fca5a5;
+        }
+
+        .kano-indifferent {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-color: #d1d5db;
+        }
+
+        .kano-item {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .kano-item-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .kano-item-meta {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Jobs to be Done */
+        .jtbd-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #f2613f;
+            margin-bottom: 1rem;
+        }
+
+        .jtbd-job {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #111827;
+        }
+
+        .jtbd-context {
+            color: #6b7280;
+            font-size: 0.9375rem;
+            margin-bottom: 1rem;
+        }
+
+        .jtbd-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .jtbd-metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .jtbd-metric-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .jtbd-metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .feedback-examples {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .feedback-examples-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-example {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .feedback-example:before {
+            content: '"';
+            position: absolute;
+            left: 0;
+            color: #f2613f;
+            font-weight: 700;
+        }
+
+        /* Product Strategy Matrix */
+        .strategy-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .strategy-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .strategy-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .strategy-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .strategy-item {
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .strategy-item-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .strategy-item-impact {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .impact-high {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .impact-medium {
+            color: #d97706;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 TechCo Product Feedback Dashboard</h1>
+        <p>Strategic Product Analysis • RICE Scoring • Kano Model • Jobs-to-be-Done Framework</p>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('strategic')">🎯 Strategic Overview</button>
+            <button class="tab" onclick="showTab('rice')">📊 RICE Prioritization</button>
+            <button class="tab" onclick="showTab('kano')">💎 Kano Model</button>
+            <button class="tab" onclick="showTab('jtbd')">🎭 Jobs-to-be-Done</button>
+            <button class="tab" onclick="showTab('trends')">📈 Trend Analysis</button>
+            <button class="tab" onclick="showTab('cohorts')">👥 Cohort Analysis</button>
+        </div>
+
+        <!-- Strategic Overview Tab -->
+        <div id="strategic" class="tab-content active">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Product-Market Fit Score</div>
+                    <div class="metric-value">68%</div>
+                    <div class="metric-change positive">↑ 12% vs Q4 2025</div>
+                    <div class="metric-meta">Target: 70% for strong PMF • Based on "very disappointed" metric</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Feature Adoption Rate</div>
+                    <div class="metric-value">42%</div>
+                    <div class="metric-change negative">↓ 8% (need improvement)</div>
+                    <div class="metric-meta">Users adopting 3+ features • Industry avg: 55%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Time to Value (Median)</div>
+                    <div class="metric-value">4.2 days</div>
+                    <div class="metric-change positive">↓ 1.3 days (faster)</div>
+                    <div class="metric-meta">Time from signup to first API call • Target: <3 days</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Feature Request Velocity</div>
+                    <div class="metric-value">34/week</div>
+                    <div class="metric-change positive">↑ 22% (engaged users)</div>
+                    <div class="metric-meta">Healthy sign of engagement • 67% from power users</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Feedback Volume & Sentiment Trend (Last 90 Days)</div>
+                        <div class="chart-meta">7-day moving average • Y-axis starts at 0 for honest visualization</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Feedback Distribution by Category</div>
+                        <div class="chart-meta">Last 30 days • Total: 284 items</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">User Health vs. ARR Scatter Plot</div>
+                        <div class="chart-meta">Bubble size = feedback volume • Identify at-risk high-value customers</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="healthArrChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Product Strategy Matrix</div>
+                        <div class="chart-meta">Eisenhower Matrix applied to product decisions</div>
+                    </div>
+                </div>
+                <div class="strategy-matrix">
+                    <div class="strategy-card" style="border-color: #dc2626;">
+                        <h3>🚨 Urgent & Important (DO NOW)</h3>
+                        <div class="strategy-items">
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Fix Windows DLL Error (#258)</div>
+                                <div class="strategy-item-impact">Impact: <span class="impact-high">$785K ARR at risk</span></div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Magistral Infinite Loop Bug</div>
+                                <div class="strategy-item-impact">Impact: <span class="impact-high">Reputation damage</span></div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Enterprise Churn Prevention (TechCorp)</div>
+                                <div class="strategy-item-impact">Impact: <span class="impact-high">$125K ARR, 60 days to renewal</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="strategy-card" style="border-color: #d97706;">
+                        <h3>📅 Important, Not Urgent (SCHEDULE)</h3>
+                        <div class="strategy-items">
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">CPU Inference Backend</div>
+                                <div class="strategy-item-impact">Impact: <span class="impact-medium">$145K ARR + market expansion</span></div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Documentation Overhaul</div>
+                                <div class="strategy-item-impact">Impact: <span class="impact-medium">Reduce support 25%, improve NPS</span></div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Multi-modal Features (Vision)</div>
+                                <div class="strategy-item-impact">Impact: <span class="impact-medium">$200K+ upsell opportunity</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="strategy-card" style="border-color: #3b82f6;">
+                        <h3>⚡ Urgent, Not Important (DELEGATE)</h3>
+                        <div class="strategy-items">
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Launch Video Quality Issues</div>
+                                <div class="strategy-item-impact">Impact: Marketing polish</div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Poetry Install Syntax Error</div>
+                                <div class="strategy-item-impact">Impact: Developer onboarding friction</div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Blackwell GPU Support</div>
+                                <div class="strategy-item-impact">Impact: Future-proofing (hardware not GA yet)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="strategy-card" style="border-color: #6b7280;">
+                        <h3>📋 Neither Urgent nor Important (BACKLOG)</h3>
+                        <div class="strategy-items">
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Minor UI Polish Requests</div>
+                                <div class="strategy-item-impact">Impact: Low priority enhancements</div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Edge Case Bug Fixes</div>
+                                <div class="strategy-item-impact">Impact: Affects <5 users</div>
+                            </div>
+                            <div class="strategy-item">
+                                <div class="strategy-item-title">Nice-to-have Integrations</div>
+                                <div class="strategy-item-impact">Impact: Low demand signals</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RICE Prioritization Tab -->
+        <div id="rice" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">RICE Prioritization Framework</div>
+                        <div class="chart-meta">Reach × Impact × Confidence ÷ Effort = Priority Score</div>
+                    </div>
+                </div>
+                <p style="color: #6b7280; margin-bottom: 1.5rem;">
+                    <strong>RICE Formula:</strong>
+                    <strong>Reach</strong> (users affected per quarter) ×
+                    <strong>Impact</strong> (0.25=minimal, 0.5=low, 1=medium, 2=high, 3=massive) ×
+                    <strong>Confidence</strong> (0-100%) ÷
+                    <strong>Effort</strong> (person-months) =
+                    <strong>RICE Score</strong>
+                </p>
+
+                <table class="rice-table">
+                    <thead>
+                        <tr>
+                            <th>Initiative</th>
+                            <th>Reach</th>
+                            <th>Impact</th>
+                            <th>Confidence</th>
+                            <th>Effort</th>
+                            <th>RICE Score</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong>Fix Windows DLL Error (#258)</strong><br>
+                                <small style="color: #6b7280;">Unblocks enterprise deployments</small>
+                            </td>
+                            <td>450<br><small style="color: #6b7280;">8 enterprise + 442 waitlist</small></td>
+                            <td>3.0<br><small style="color: #6b7280;">Massive (unblocks)</small></td>
+                            <td>90%<br><small style="color: #6b7280;">High confidence</small></td>
+                            <td>0.5<br><small style="color: #6b7280;">2 weeks</small></td>
+                            <td><span class="rice-score high">2,430</span></td>
+                            <td><span class="priority-badge priority-p0">P0</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Documentation Overhaul</strong><br>
+                                <small style="color: #6b7280;">Match OpenAI docs quality</small>
+                            </td>
+                            <td>2,400<br><small style="color: #6b7280;">All new users/quarter</small></td>
+                            <td>1.5<br><small style="color: #6b7280;">High (reduce friction)</small></td>
+                            <td>80%<br><small style="color: #6b7280;">Proven pattern</small></td>
+                            <td>1.5<br><small style="color: #6b7280;">6 weeks</small></td>
+                            <td><span class="rice-score high">1,920</span></td>
+                            <td><span class="priority-badge priority-p0">P0</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Magistral Reasoning Improvements</strong><br>
+                                <small style="color: #6b7280;">Fix infinite loops, expand context</small>
+                            </td>
+                            <td>1,200<br><small style="color: #6b7280;">Reasoning use case users</small></td>
+                            <td>2.0<br><small style="color: #6b7280;">High (quality issue)</small></td>
+                            <td>70%<br><small style="color: #6b7280;">Complex model work</small></td>
+                            <td>2.0<br><small style="color: #6b7280;">8 weeks</small></td>
+                            <td><span class="rice-score high">840</span></td>
+                            <td><span class="priority-badge priority-p0">P0</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>CPU Inference Backend</strong><br>
+                                <small style="color: #6b7280;">Enable edge deployment use cases</small>
+                            </td>
+                            <td>600<br><small style="color: #6b7280;">Edge/cost-sensitive users</small></td>
+                            <td>2.0<br><small style="color: #6b7280;">High (new segment)</small></td>
+                            <td>75%<br><small style="color: #6b7280;">Well-scoped</small></td>
+                            <td>3.0<br><small style="color: #6b7280;">12 weeks</small></td>
+                            <td><span class="rice-score medium">300</span></td>
+                            <td><span class="priority-badge priority-p1">P1</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Multi-modal (Vision + Text)</strong><br>
+                                <small style="color: #6b7280;">Compete with GPT-4V, Claude 3</small>
+                            </td>
+                            <td>800<br><small style="color: #6b7280;">Champion users + prospects</small></td>
+                            <td>2.5<br><small style="color: #6b7280;">Very High (upsell)</small></td>
+                            <td>60%<br><small style="color: #6b7280;">Uncertain demand</small></td>
+                            <td>6.0<br><small style="color: #6b7280;">24 weeks</small></td>
+                            <td><span class="rice-score medium">200</span></td>
+                            <td><span class="priority-badge priority-p1">P1</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Blackwell GPU Support</strong><br>
+                                <small style="color: #6b7280;">Flash attention for new NVIDIA arch</small>
+                            </td>
+                            <td>150<br><small style="color: #6b7280;">Early adopters only</small></td>
+                            <td>1.0<br><small style="color: #6b7280;">Medium (future-proof)</small></td>
+                            <td>85%<br><small style="color: #6b7280;">Clear spec</small></td>
+                            <td>1.0<br><small style="color: #6b7280;">4 weeks</small></td>
+                            <td><span class="rice-score medium">128</span></td>
+                            <td><span class="priority-badge priority-p1">P1</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>PyTorch Forward Hooks (#246)</strong><br>
+                                <small style="color: #6b7280;">Enable model introspection</small>
+                            </td>
+                            <td>80<br><small style="color: #6b7280;">Research users</small></td>
+                            <td>1.0<br><small style="color: #6b7280;">Medium (niche)</small></td>
+                            <td>90%<br><small style="color: #6b7280;">Well-understood</small></td>
+                            <td>0.75<br><small style="color: #6b7280;">3 weeks</small></td>
+                            <td><span class="rice-score medium">96</span></td>
+                            <td><span class="priority-badge priority-p2">P2</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Poetry Install Fix (#247)</strong><br>
+                                <small style="color: #6b7280;">Developer onboarding friction</small>
+                            </td>
+                            <td>300<br><small style="color: #6b7280;">New developers</small></td>
+                            <td>0.5<br><small style="color: #6b7280;">Low (workaround exists)</small></td>
+                            <td>95%<br><small style="color: #6b7280;">Simple fix</small></td>
+                            <td>0.25<br><small style="color: #6b7280;">1 week</small></td>
+                            <td><span class="rice-score medium">57</span></td>
+                            <td><span class="priority-badge priority-p2">P2</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px;">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">📊 RICE Analysis Insights</h3>
+                    <ul style="margin-left: 1.5rem; color: #1e40af;">
+                        <li><strong>Top 3 priorities</strong> (RICE > 800) address critical bugs/gaps with massive reach</li>
+                        <li><strong>Documentation</strong> has highest total impact (2,400 users × high confidence)</li>
+                        <li><strong>Multi-modal</strong> has high potential but lower confidence - validate demand first</li>
+                        <li><strong>Quick wins</strong>: Poetry fix (57 RICE, 1 week) and Hooks (96 RICE, 3 weeks)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">RICE Score Visualization</div>
+                        <div class="chart-meta">Effort vs. Impact (bubble size = reach × confidence)</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="riceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kano Model Tab -->
+        <div id="kano" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Kano Model Analysis</div>
+                        <div class="chart-meta">Categorize features by customer satisfaction impact</div>
+                    </div>
+                </div>
+                <p style="color: #6b7280; margin-bottom: 1.5rem;">
+                    <strong>Kano Categories:</strong>
+                    <span style="color: #059669;">■ Delighters</span> (exceed expectations),
+                    <span style="color: #d97706;">■ Performance</span> (more is better),
+                    <span style="color: #dc2626;">■ Basic</span> (must-haves),
+                    <span style="color: #6b7280;">■ Indifferent</span> (don't care)
+                </p>
+
+                <div class="kano-grid">
+                    <div class="kano-quadrant kano-basic">
+                        <h3>🔴 Basic Expectations (Must-Have)</h3>
+                        <small style="color: #991b1b;">Absence causes dissatisfaction</small>
+                        <div style="margin-top: 1rem;">
+                            <div class="kano-item">
+                                <div class="kano-item-title">Windows Compatibility</div>
+                                <div class="kano-item-meta">8 enterprise blocked • "Should just work"</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Model Output Quality</div>
+                                <div class="kano-item-meta">Infinite loops unacceptable • Table stakes</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">API Reliability (99.9% uptime)</div>
+                                <div class="kano-item-meta">Expected by all enterprise</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Basic Documentation</div>
+                                <div class="kano-item-meta">Can't use product without it</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kano-quadrant kano-performance">
+                        <h3>🟡 Performance Features (More is Better)</h3>
+                        <small style="color: #92400e;">Linear satisfaction increase</small>
+                        <div style="margin-top: 1rem;">
+                            <div class="kano-item">
+                                <div class="kano-item-title">API Response Speed</div>
+                                <div class="kano-item-meta">Currently 1.2s → want 0.8s (OpenAI level)</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Context Window Size</div>
+                                <div class="kano-item-meta">128K → users want 200K+ for reasoning</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Documentation Quality</div>
+                                <div class="kano-item-meta">3.2/5 → 4.5/5 = proportional satisfaction</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Model Accuracy</div>
+                                <div class="kano-item-meta">Always want better benchmarks</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kano-quadrant kano-indifferent">
+                        <h3>⚪ Indifferent (Low Priority)</h3>
+                        <small style="color: #6b7280;">Users don't care either way</small>
+                        <div style="margin-top: 1rem;">
+                            <div class="kano-item">
+                                <div class="kano-item-title">UI Polish (Color Schemes)</div>
+                                <div class="kano-item-meta">Nice but doesn't affect usage</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Minor SDK Conveniences</div>
+                                <div class="kano-item-meta">Few users mention</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Blackwell GPU (Now)</div>
+                                <div class="kano-item-meta">Hardware not GA yet, no demand</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kano-quadrant kano-delighter">
+                        <h3>🟢 Delighters (Exceed Expectations)</h3>
+                        <small style="color: #065f46;">Unexpected features that wow users</small>
+                        <div style="margin-top: 1rem;">
+                            <div class="kano-item">
+                                <div class="kano-item-title">Open Weights Models</div>
+                                <div class="kano-item-meta">5.0/5 rating • Huge differentiator vs OpenAI</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">MCP Integration "Done Right"</div>
+                                <div class="kano-item-meta">HN: "Solved in a very friendly way"</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">Multi-modal Capabilities</div>
+                                <div class="kano-item-meta">Not expected, would surprise champions</div>
+                            </div>
+                            <div class="kano-item">
+                                <div class="kano-item-title">European Data Sovereignty</div>
+                                <div class="kano-item-meta">Strategic advantage for EU customers</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 8px;">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">💡 Kano Strategy Recommendations</h3>
+                    <ul style="margin-left: 1.5rem; color: #166534;">
+                        <li><strong>Fix Basics First:</strong> Windows bug and output loops are hygiene factors - absence = churn</li>
+                        <li><strong>Invest in Performance:</strong> Docs quality and API speed have linear ROI</li>
+                        <li><strong>Double Down on Delighters:</strong> Open weights is your moat - promote it heavily</li>
+                        <li><strong>Avoid Indifferent:</strong> Don't waste time on UI polish when basics are broken</li>
+                        <li><strong>Kano Migration:</strong> Yesterday's delighters (open weights) → today's basics. Stay ahead!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jobs-to-be-Done Tab -->
+        <div id="jtbd" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Jobs-to-be-Done Analysis</div>
+                        <div class="chart-meta">Understanding what customers are "hiring" TechCo to do</div>
+                    </div>
+                </div>
+                <p style="color: #6b7280; margin-bottom: 1.5rem;">
+                    <strong>JTBD Framework:</strong> When [situation], I want to [motivation], so I can [outcome].
+                    Focus on the job, not the product feature.
+                </p>
+
+                <div class="jtbd-card">
+                    <div class="jtbd-job">Job #1: "Help me reduce LLM costs without sacrificing quality"</div>
+                    <div class="jtbd-context">
+                        <strong>Situation:</strong> When my OpenAI/Anthropic bills are growing 3x faster than revenue<br>
+                        <strong>Motivation:</strong> I want to find a cheaper alternative that maintains 90%+ quality<br>
+                        <strong>Outcome:</strong> So I can keep my margin healthy while scaling AI features
+                    </div>
+                    <div class="jtbd-metrics">
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Job Frequency</div>
+                            <div class="jtbd-metric-value">156 mentions</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Satisfaction</div>
+                            <div class="jtbd-metric-value" style="color: #059669;">8.2/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Importance</div>
+                            <div class="jtbd-metric-value">9.1/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Opportunity Score</div>
+                            <div class="jtbd-metric-value" style="color: #059669;">9.9</div>
+                        </div>
+                    </div>
+                    <div class="feedback-examples">
+                        <div class="feedback-examples-title">📝 Customer Quotes (Job Evidence):</div>
+                        <div class="feedback-example">Cut our API costs by 70% switching from GPT-4 to Mixtral. Performance is comparable! (Reddit, 450 upvotes)</div>
+                        <div class="feedback-example">TechCo Pro for summarization is 40% cheaper than Claude with similar quality (Discord)</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #ecfdf5; border-radius: 8px;">
+                        <strong style="color: #065f46;">✅ How Well Does TechCo Do This Job?</strong><br>
+                        <span style="color: #059669;">Excellent - this is TechCo's core value prop. Keep price advantage, maintain quality parity.</span>
+                    </div>
+                </div>
+
+                <div class="jtbd-card">
+                    <div class="jtbd-job">Job #2: "Help me deploy AI on-premise for compliance/privacy"</div>
+                    <div class="jtbd-context">
+                        <strong>Situation:</strong> When I work in regulated industries (finance, healthcare, gov) with strict data policies<br>
+                        <strong>Motivation:</strong> I want to run LLMs entirely within my infrastructure<br>
+                        <strong>Outcome:</strong> So I can use AI without sending data to third-party APIs
+                    </div>
+                    <div class="jtbd-metrics">
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Job Frequency</div>
+                            <div class="jtbd-metric-value">89 mentions</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Satisfaction</div>
+                            <div class="jtbd-metric-value" style="color: #d97706;">6.8/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Importance</div>
+                            <div class="jtbd-metric-value">9.5/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Opportunity Score</div>
+                            <div class="jtbd-metric-value" style="color: #d97706;">11.7</div>
+                        </div>
+                    </div>
+                    <div class="feedback-examples">
+                        <div class="feedback-examples-title">📝 Customer Quotes (Job Evidence):</div>
+                        <div class="feedback-example">Fortune 500 interested in on-premise. Would pay 5x for compliance. Open weights are huge selling point. (Gong sales call)</div>
+                        <div class="feedback-example">Windows DLL error blocking our on-prem deployment. Enterprise blocker. (GitHub #258)</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-radius: 8px;">
+                        <strong style="color: #92400e;">⚠️ How Well Does TechCo Do This Job?</strong><br>
+                        <span style="color: #d97706;">Moderate - open weights enable this, but Windows bugs and CPU inference gaps hurt. High opportunity!</span>
+                    </div>
+                </div>
+
+                <div class="jtbd-card">
+                    <div class="jtbd-job">Job #3: "Help me get started quickly without reading 100 pages of docs"</div>
+                    <div class="jtbd-context">
+                        <strong>Situation:</strong> When I'm a new developer trying to integrate TechCo for the first time<br>
+                        <strong>Motivation:</strong> I want to make my first successful API call in <15 minutes<br>
+                        <strong>Outcome:</strong> So I can evaluate if TechCo fits my use case before deep investment
+                    </div>
+                    <div class="jtbd-metrics">
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Job Frequency</div>
+                            <div class="jtbd-metric-value">234 mentions</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Satisfaction</div>
+                            <div class="jtbd-metric-value" style="color: #dc2626;">5.2/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Importance</div>
+                            <div class="jtbd-metric-value">8.8/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Opportunity Score</div>
+                            <div class="jtbd-metric-value" style="color: #dc2626;">12.4</div>
+                        </div>
+                    </div>
+                    <div class="feedback-examples">
+                        <div class="feedback-examples-title">📝 Customer Quotes (Job Evidence):</div>
+                        <div class="feedback-example">Switched from OpenAI's fine-tuning but docs are sparse. Need production deployment examples. (Discord, 23 reactions)</div>
+                        <div class="feedback-example">Took me 3 hours to figure out embeddings dimensions. OpenAI docs are gold standard, TechCo needs work. (Reddit)</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #fee2e2; border-radius: 8px;">
+                        <strong style="color: #991b1b;">🔴 How Well Does TechCo Do This Job?</strong><br>
+                        <span style="color: #dc2626;">Poor - 3.2/5 docs rating vs 4.5/5 for OpenAI. Biggest gap to close. High impact fix!</span>
+                    </div>
+                </div>
+
+                <div class="jtbd-card">
+                    <div class="jtbd-job">Job #4: "Help me build reasoning/agentic workflows that actually work"</div>
+                    <div class="jtbd-context">
+                        <strong>Situation:</strong> When I need AI to solve complex, multi-step problems autonomously<br>
+                        <strong>Motivation:</strong> I want reliable chain-of-thought reasoning without infinite loops<br>
+                        <strong>Outcome:</strong> So I can build production-grade AI agents for my customers
+                    </div>
+                    <div class="jtbd-metrics">
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Job Frequency</div>
+                            <div class="jtbd-metric-value">67 mentions</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Satisfaction</div>
+                            <div class="jtbd-metric-value" style="color: #dc2626;">4.1/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Importance</div>
+                            <div class="jtbd-metric-value">9.2/10</div>
+                        </div>
+                        <div class="jtbd-metric">
+                            <div class="jtbd-metric-label">Opportunity Score</div>
+                            <div class="jtbd-metric-value" style="color: #dc2626;">14.3</div>
+                        </div>
+                    </div>
+                    <div class="feedback-examples">
+                        <div class="feedback-examples-title">📝 Customer Quotes (Job Evidence):</div>
+                        <div class="feedback-example">Magistral gets stuck in infinite thinking loop then times out. 128K context too small for meaningful work. (Reddit, 156 upvotes)</div>
+                        <div class="feedback-example">Responses too short and not creative. Simulates reasoning but doesn't deliver. (r/LocalLLaMA)</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #fee2e2; border-radius: 8px;">
+                        <strong style="color: #991b1b;">🔴 How Well Does TechCo Do This Job?</strong><br>
+                        <span style="color: #dc2626;">Critical Gap - Magistral has quality issues. Highest opportunity score (14.3). Fix ASAP!</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px;">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">🎯 JTBD Strategic Insights</h3>
+                    <ul style="margin-left: 1.5rem; color: #1e40af;">
+                        <li><strong>Opportunity Score Formula:</strong> Importance + (Importance - Satisfaction) = higher score = bigger gap</li>
+                        <li><strong>Highest Opportunity (14.3):</strong> Reasoning workflows - users want it badly, we deliver poorly</li>
+                        <li><strong>Second Highest (12.4):</strong> Quick onboarding - docs overhaul is must-do</li>
+                        <li><strong>Strongest Position (9.9):</strong> Cost reduction - already winning, maintain lead</li>
+                        <li><strong>Action:</strong> Prioritize Job #3 (docs) and Job #4 (reasoning) to close biggest gaps</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">JTBD Opportunity Landscape</div>
+                        <div class="chart-meta">Importance vs. Satisfaction (bubble size = frequency)</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="jtbdChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Analysis Tab -->
+        <div id="trends" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Feature Request Velocity Over Time</div>
+                        <div class="chart-meta">Leading indicator of product-market fit</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="velocityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Topic Clustering Over Time</div>
+                        <div class="chart-meta">What users are talking about - emerging themes</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="topicChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">NPS Trend by Customer Segment</div>
+                        <div class="chart-meta">Net Promoter Score: % Promoters - % Detractors</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="npsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cohort Analysis Tab -->
+        <div id="cohorts" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Retention Cohorts by Signup Month</div>
+                        <div class="chart-meta">% of users still active N months after signup</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="cohortChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Feature Adoption Funnel</div>
+                        <div class="chart-meta">From signup → first API call → production → power user</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="funnelChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Revenue Cohorts by Tier</div>
+                        <div class="chart-meta">ARR expansion/contraction over time</div>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Chart.js configuration
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        Chart.defaults.color = '#6b7280';
+
+        // 1. Sentiment Trend Chart
+        const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+        new Chart(sentimentCtx, {
+            type: 'line',
+            data: {
+                labels: ['Oct 15', 'Oct 22', 'Oct 29', 'Nov 5', 'Nov 12', 'Nov 19', 'Nov 26', 'Dec 3', 'Dec 10', 'Dec 17', 'Dec 24', 'Dec 31', 'Jan 7'],
+                datasets: [{
+                    label: 'Sentiment Score (7-day MA)',
+                    data: [0.58, 0.61, 0.59, 0.55, 0.52, 0.48, 0.51, 0.56, 0.59, 0.62, 0.65, 0.67, 0.68],
+                    borderColor: '#f2613f',
+                    backgroundColor: 'rgba(242, 97, 63, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Feedback Volume',
+                    data: [18, 22, 25, 31, 28, 24, 26, 29, 32, 35, 38, 41, 34],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 13 }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        min: -1,
+                        max: 1,
+                        title: {
+                            display: true,
+                            text: 'Sentiment Score'
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        min: 0,
+                        title: {
+                            display: true,
+                            text: 'Feedback Volume'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Category Distribution Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Bug Reports', 'Feature Requests', 'Documentation', 'Performance', 'Integration Issues', 'Pricing/Billing'],
+                datasets: [{
+                    data: [89, 67, 45, 34, 28, 21],
+                    backgroundColor: [
+                        '#ef4444',
+                        '#3b82f6',
+                        '#8b5cf6',
+                        '#f59e0b',
+                        '#10b981',
+                        '#6b7280'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Health vs ARR Scatter
+        const healthArrCtx = document.getElementById('healthArrChart').getContext('2d');
+        new Chart(healthArrCtx, {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'Enterprise',
+                    data: [
+                        { x: 38, y: 125000, r: 15 }, // TechCorp - high risk
+                        { x: 55, y: 600000, r: 12 }, // Acme - medium risk
+                        { x: 72, y: 240000, r: 8 },
+                        { x: 88, y: 350000, r: 6 }
+                    ],
+                    backgroundColor: 'rgba(242, 97, 63, 0.6)',
+                    borderColor: '#f2613f',
+                    borderWidth: 2
+                }, {
+                    label: 'Growth',
+                    data: [
+                        { x: 78, y: 42000, r: 8 },
+                        { x: 65, y: 58000, r: 10 },
+                        { x: 82, y: 35000, r: 6 }
+                    ],
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 2
+                }, {
+                    label: 'Pro',
+                    data: [
+                        { x: 74, y: 12000, r: 5 },
+                        { x: 81, y: 8700, r: 4 },
+                        { x: 88, y: 6500, r: 3 }
+                    ],
+                    backgroundColor: 'rgba(139, 92, 246, 0.6)',
+                    borderColor: '#8b5cf6',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': Health ' + context.parsed.x +
+                                       ', ARR $' + (context.parsed.y / 1000).toFixed(0) + 'K';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'logarithmic',
+                        title: {
+                            display: true,
+                            text: 'ARR ($)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + (value / 1000).toFixed(0) + 'K';
+                            }
+                        }
+                    },
+                    x: {
+                        min: 0,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Health Score'
+                        },
+                        grid: {
+                            color: function(context) {
+                                if (context.tick.value === 40 || context.tick.value === 65) {
+                                    return '#ef4444';
+                                }
+                                return '#e5e7eb';
+                            },
+                            lineWidth: function(context) {
+                                if (context.tick.value === 40 || context.tick.value === 65) {
+                                    return 2;
+                                }
+                                return 1;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 4. RICE Score Chart
+        const riceCtx = document.getElementById('riceChart').getContext('2d');
+        new Chart(riceCtx, {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'Initiatives',
+                    data: [
+                        { x: 0.5, y: 3.0, r: 40, label: 'Windows Fix' },
+                        { x: 1.5, y: 1.5, r: 35, label: 'Docs Overhaul' },
+                        { x: 2.0, y: 2.0, r: 25, label: 'Magistral Fix' },
+                        { x: 3.0, y: 2.0, r: 22, label: 'CPU Backend' },
+                        { x: 6.0, y: 2.5, r: 20, label: 'Multi-modal' },
+                        { x: 1.0, y: 1.0, r: 12, label: 'Blackwell' },
+                        { x: 0.75, y: 1.0, r: 8, label: 'PyTorch Hooks' },
+                        { x: 0.25, y: 0.5, r: 10, label: 'Poetry Fix' }
+                    ],
+                    backgroundColor: 'rgba(242, 97, 63, 0.6)',
+                    borderColor: '#f2613f',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const point = context.raw;
+                                return point.label + ' - Effort: ' + point.x + ' months, Impact: ' + point.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Impact Score'
+                        },
+                        min: 0,
+                        max: 3.5
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Effort (Person-Months)'
+                        },
+                        min: 0,
+                        max: 7
+                    }
+                }
+            }
+        });
+
+        // 5. JTBD Opportunity Chart
+        const jtbdCtx = document.getElementById('jtbdChart').getContext('2d');
+        new Chart(jtbdCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Jobs-to-be-Done',
+                    data: [
+                        { x: 8.2, y: 9.1, label: 'Cost Reduction', size: 156 },
+                        { x: 6.8, y: 9.5, label: 'On-Prem Deploy', size: 89 },
+                        { x: 5.2, y: 8.8, label: 'Quick Onboarding', size: 234 },
+                        { x: 4.1, y: 9.2, label: 'Reasoning/Agents', size: 67 }
+                    ],
+                    pointRadius: function(context) {
+                        return context.raw.size / 10;
+                    },
+                    backgroundColor: function(context) {
+                        const oppScore = context.raw.y + (context.raw.y - context.raw.x);
+                        if (oppScore > 12) return 'rgba(239, 68, 68, 0.6)';
+                        if (oppScore > 10) return 'rgba(245, 158, 11, 0.6)';
+                        return 'rgba(34, 197, 94, 0.6)';
+                    },
+                    borderColor: function(context) {
+                        const oppScore = context.raw.y + (context.raw.y - context.raw.x);
+                        if (oppScore > 12) return '#ef4444';
+                        if (oppScore > 10) return '#f59e0b';
+                        return '#22c55e';
+                    },
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const point = context.raw;
+                                const opp = (point.y + (point.y - point.x)).toFixed(1);
+                                return point.label + ' - Satisfaction: ' + point.x +
+                                       ', Importance: ' + point.y +
+                                       ', Opportunity: ' + opp +
+                                       ' (' + point.size + ' mentions)';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Importance (1-10)'
+                        },
+                        min: 0,
+                        max: 10
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Satisfaction (1-10)'
+                        },
+                        min: 0,
+                        max: 10
+                    }
+                }
+            }
+        });
+
+        // 6. Feature Request Velocity
+        const velocityCtx = document.getElementById('velocityChart').getContext('2d');
+        new Chart(velocityCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8', 'Week 9', 'Week 10', 'Week 11', 'Week 12'],
+                datasets: [{
+                    label: 'Feature Requests',
+                    data: [18, 22, 25, 28, 31, 29, 32, 35, 38, 34, 36, 34],
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#2563eb',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Requests per Week'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 7. Topic Clustering
+        const topicCtx = document.getElementById('topicChart').getContext('2d');
+        new Chart(topicCtx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8', 'Week 9', 'Week 10', 'Week 11', 'Week 12'],
+                datasets: [{
+                    label: 'Windows/Deployment',
+                    data: [3, 4, 5, 7, 9, 12, 14, 12, 10, 9, 8, 7],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Documentation',
+                    data: [8, 9, 10, 11, 12, 11, 13, 14, 15, 14, 13, 12],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Reasoning/Agents',
+                    data: [2, 3, 4, 5, 7, 9, 11, 13, 15, 14, 12, 11],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'CPU/Edge Deployment',
+                    data: [1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 8],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: false,
+                        title: {
+                            display: true,
+                            text: 'Mentions per Week'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 8. NPS Trend
+        const npsCtx = document.getElementById('npsChart').getContext('2d');
+        new Chart(npsCtx, {
+            type: 'line',
+            data: {
+                labels: ['Oct', 'Nov', 'Dec', 'Jan'],
+                datasets: [{
+                    label: 'Enterprise',
+                    data: [42, 38, 35, 41],
+                    borderColor: '#f2613f',
+                    backgroundColor: 'rgba(242, 97, 63, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Growth',
+                    data: [55, 52, 48, 54],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Pro/Starter',
+                    data: [68, 65, 62, 67],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        min: -100,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'NPS Score'
+                        },
+                        grid: {
+                            color: function(context) {
+                                if (context.tick.value === 0) return '#ef4444';
+                                if (context.tick.value === 50) return '#10b981';
+                                return '#e5e7eb';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 9. Cohort Retention
+        const cohortCtx = document.getElementById('cohortChart').getContext('2d');
+        new Chart(cohortCtx, {
+            type: 'line',
+            data: {
+                labels: ['Month 0', 'Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
+                datasets: [{
+                    label: 'Sept 2025',
+                    data: [100, 78, 65, 58, 52, 48, 45],
+                    borderColor: '#ef4444',
+                    tension: 0.4
+                }, {
+                    label: 'Oct 2025',
+                    data: [100, 82, 71, 64, 59, 55, null],
+                    borderColor: '#f59e0b',
+                    tension: 0.4
+                }, {
+                    label: 'Nov 2025',
+                    data: [100, 85, 75, 68, 63, null, null],
+                    borderColor: '#3b82f6',
+                    tension: 0.4
+                }, {
+                    label: 'Dec 2025',
+                    data: [100, 88, 79, 72, null, null, null],
+                    borderColor: '#10b981',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Retention %'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 10. Funnel Chart
+        const funnelCtx = document.getElementById('funnelChart').getContext('2d');
+        new Chart(funnelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Signed Up', 'First API Call', 'Production Usage', 'Power User (3+ features)'],
+                datasets: [{
+                    label: 'Conversion Rate',
+                    data: [100, 72, 48, 42],
+                    backgroundColor: [
+                        '#10b981',
+                        '#3b82f6',
+                        '#f59e0b',
+                        '#ef4444'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.x + '% of users';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        min: 0,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: '% of Users'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 11. Revenue Cohorts
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Q3 2025', 'Q4 2025', 'Q1 2026'],
+                datasets: [{
+                    label: 'Enterprise',
+                    data: [1.2, 1.5, 1.8],
+                    backgroundColor: '#f2613f'
+                }, {
+                    label: 'Growth',
+                    data: [0.6, 0.8, 0.9],
+                    backgroundColor: '#3b82f6'
+                }, {
+                    label: 'Pro',
+                    data: [0.3, 0.35, 0.4],
+                    backgroundColor: '#8b5cf6'
+                }, {
+                    label: 'Starter',
+                    data: [0.1, 0.12, 0.15],
+                    backgroundColor: '#10b981'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'ARR ($M)'
+                        }
+                    },
+                    x: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
